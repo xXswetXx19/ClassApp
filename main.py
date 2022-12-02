@@ -1,5 +1,5 @@
 from tkinter import *
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from Clibs import Autocomplete as ac
 import sqlite3 as sql
 from docxtpl import DocxTemplate
@@ -16,11 +16,11 @@ class APP:
         self.master.resizable(0,0)
         # self.master.config(bg = "#E4DFEC")
         self.master.bind('<KeyPress>', self.update)
-        # Databases functions
+        # Databases functions if not exist
         self.createDB()
         self.createTable1()
         self.createTable2()
-        
+        self.createTable3()
         # Getting data from database
         query = ("SELECT Materia FROM Materias")
         Materias = self.run_query(query).fetchall()
@@ -49,30 +49,74 @@ class APP:
         # Treeview Configuration
         self.tree.tag_configure('datatw', font=("", 12), foreground = 'Black')
 
+        # Creating Buttons and placing them with the Dic data
+        ButtonsData = {
+            "Crear Tarea": self.CreateTarea,
+            "Ver Tareas": (),
+            "Configuracion": self.configuration,
+            "Agregar Materia": self.addMateria,
+            "Eliminar Materia": self.removeMateria,
+            "Salir": self.master.destroy
+        }
         # Creating Buttons
-        self.button1 = Button(self.frame, text = "Crear Tarea", command = lambda: self.CreateTarea(), width=30, height=2)	      
-        self.button2 = Button(self.frame, text = "Ver Tareas", command = (), width=30, height=2)	
-        self.button3 = Button(self.frame, text = "Configurar", command = (), width=30, height=2)
-        self.button4 = Button(self.frame, text = "Agregar Materia", command = lambda: self.addMateria(), width=30, height=2, anchor= CENTER)
-        self.button5 = Button(self.frame, text = "Eliminar Materia", command = lambda: self.removeMateria(), width=30, height=2, anchor= CENTER)	
-        self.button6 = Button(self.frame, text = "Salir", command = self.master.destroy, width=30, height=2, anchor= CENTER)	
-        # Placing Buttons
-        self.button1.grid(row = 0, column = 0)
-        self.button2.grid(row = 1, column = 0)
-        self.button3.grid(row = 2, column = 0)
-        self.button4.grid(row = 3, column = 0)
-        self.button5.grid(row = 4, column = 0)
-        self.button6.grid(row = 5, column = 0)
-
+        for i in range(len(ButtonsData.keys())):
+            Button(self.frame, text = list(ButtonsData.keys())[i], command = list(ButtonsData.values())[i], width=30, height=2).grid(row = i, column = 0, sticky = W + E)
         # Startup Functions
         self.FillTw()
 
-
-    # Global Functions 
+    # Global Functions
+    def configuration(self):
+        self.Config_win = Toplevel()
+        self.Config_win.resizable(width=False, height=False)
+        self.Config_win.title = 'Configuración'
+        self.Config_win.geometry('300x150')
+        # self.Config_win.iconbitmap("Archivos/imgs/Icono.ico")
+        query = 'SELECT * FROM Configuracion'
+        result = self.run_query(query).fetchone()
+        Values = ["Nombres:", "Apellidos:", "Paralelo:", "Ruta:"]
+        
+        for i in Values:
+            # Label(self.Config_win, text = i).grid(row = Values.index(i), column = 1, sticky = W, padx= 5, pady=(0,10))
+            Label(self.Config_win, text = i).place(anchor = W, relx = .1, rely = .1 + (Values.index(i) * .2))
+            if result:
+                # Entry(self.Config_win, textvariable = StringVar(self.Config_win, value= result[Values.index(i)+1])).grid(row = Values.index(i), column = 2, padx= 5, pady=(0,10))
+                Entry(self.Config_win, textvariable = StringVar(self.Config_win, value= result[Values.index(i)+1]), width=27).place(anchor = CENTER, relx = .6, rely = .1 + (Values.index(i) * .2))
+                
+            else:
+                # Entry(self.Config_win).grid(row = Values.index(i),  column = 2, sticky = W, padx= 5, pady=(0,10), ANCHOR = CENTER)
+                Entry(self.Config_win).place(anchor = CENTER, relx = .6, rely = .1 + (Values.index(i) * .2))
+        
+        def agg():
+            # Get data from entries created by place loop tkinter
+            data = [i.get() for i in self.Config_win.children.values() if type(i) == Entry]
+            Nombres, Apellidos, Paralelo, Ruta = data
+   
+            if not Nombres or not Apellidos or not Paralelo or not Ruta:
+                return messagebox.showerror("Error", "Verifique que todos los campos esten llenos")
+            if result:
+                query = f'UPDATE Configuracion SET Nombres = ?, Apellidos = ?, Paralelo = ?, Ruta = ? WHERE Id = ?'
+                self.run_query(query, (Nombres, Apellidos, Paralelo, Ruta, result[0]))
+                self.Config_win.destroy()
+            else: 
+                query = f'INSERT INTO Configuracion VALUES(NULL, ?, ?, ?, ?)'
+                self.run_query(query, (Nombres, Apellidos, Paralelo, Ruta))
+                self.Config_win.destroy()
+                
+        # get a entry using the text variable tkinter
+        RutaEntry = [i for i in self.Config_win.children.values() if type(i) == Entry][3]
+        def browsedir():
+            Dirname = filedialog.askdirectory()
+            RutaEntry.delete(0, END)
+            RutaEntry.insert(END, Dirname) # add this
+            
+        # Button(self.Config_win, text = "Examinar", command = lambda: browsedir(), height= 0.5, width=3).place(anchor = CENTER, relx = .8, rely = .1 + (Values.index("Ruta:") * .2))
+        RutaEntry.bind("<Button-1>", lambda x: browsedir())
+        Boton1 = Button(self.Config_win, text = 'Guardar', command = lambda: agg())
+        Boton1.place(anchor = CENTER, relx = .5, rely = .9)
+        
     def update(self, event):
         query = self.entry.get()
         selections = []
-
         if query != "":
             self.FillTw()
             for child in self.tree.get_children():
@@ -105,7 +149,7 @@ class APP:
         doc = DocxTemplate("plantilla.docx")
         doc.render({'MATERIA': Materia, 'FECHA': Fecha.replace(".", "/")})
         # Document_Path = rf'Tareas\{Materia}\Tarea-{Fecha}-{Num}.docx'
-        Document_Path = rf'\Tarea-{Fecha}-{Num}.docx'
+        Document_Path = rf'Tarea-{Fecha}-{Num}.docx'
         doc.save(Document_Path)
         os.startfile(Document_Path)
         
@@ -120,8 +164,11 @@ class APP:
         for element in records:
             self.tree.delete(element)
     def removeMateria(self):
+        Id = self.tree.item(self.tree.selection())['text']
+        if not Id:
+            return messagebox.showerror("Error", "Seleccione una materia")
         query = f"DELETE FROM Materias WHERE Id = ?"
-        self.run_query(query, (self.tree.item(self.tree.selection())['text'],))
+        self.run_query(query, (Id,))
         self.FillTw()
 
     def addMateria(self):
@@ -174,7 +221,8 @@ class APP:
                 Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 Nombres text, 
                 Apellidos text,
-                Paralelo)""")
+                Paralelo text,
+                Ruta text)""")
         conn.commit()
         conn.close()
     def run_query(self, query, parametros = ()):
