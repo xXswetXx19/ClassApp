@@ -21,10 +21,9 @@ class APP:
         self.createTable1()
         self.createTable2()
         self.createTable3()
-        # Getting data from database
-        query = ("SELECT Materia FROM Materias")
-        Materias = self.run_query(query).fetchall()
-        self.Materias = [i[0] for i in Materias]
+
+        self.Materias = self.getMaterias()
+        print(self.Materias)
         
         # Creating Frames
         self.TWframe = Frame(self.master, bg = "blue")
@@ -61,58 +60,80 @@ class APP:
         # Creating Buttons
         for i in range(len(ButtonsData.keys())):
             Button(self.frame, text = list(ButtonsData.keys())[i], command = list(ButtonsData.values())[i], width=30, height=2).grid(row = i, column = 0, sticky = W + E)
+       
         # Startup Functions
+
         self.FillTw()
+        self.getPath()
 
     # Global Functions
+    def getPath(self):
+        self.Path = self.run_query("SELECT Ruta FROM Configuracion").fetchone()
+        self.Path = self.Path[0] if self.Path else ""
+    def getMaterias(self):
+        query = ("SELECT Materia FROM Materias")
+        Materias = self.run_query(query).fetchall()
+        Materias = [i[0] for i in Materias]
+        return Materias
+    def CreateDirs(self):
+        Materias = self.getMaterias()
+        for Materia in Materias:
+            if self.Path:
+                if not os.path.exists(f"{self.Path}\Tareas\{Materia}"):
+                    os.mkdir(f"{self.Path}\Tareas\{Materia}")
+            else:
+                if(not os.path.exists(f'Tareas\{Materia}')):
+                    os.makedirs(f'Tareas\{Materia}')
+    def VerTareas(self):
+        pass
     def configuration(self):
         self.Config_win = Toplevel()
         self.Config_win.resizable(width=False, height=False)
         self.Config_win.title = 'Configuración'
-        self.Config_win.geometry('300x150')
+        self.Config_win.geometry('500x150')
         # self.Config_win.iconbitmap("Archivos/imgs/Icono.ico")
         query = 'SELECT * FROM Configuracion'
-        result = self.run_query(query).fetchone()
+        ConfigData = self.run_query(query).fetchone()
         Values = ["Nombres:", "Apellidos:", "Paralelo:", "Ruta:"]
         
         for i in Values:
-            # Label(self.Config_win, text = i).grid(row = Values.index(i), column = 1, sticky = W, padx= 5, pady=(0,10))
             Label(self.Config_win, text = i).place(anchor = W, relx = .1, rely = .1 + (Values.index(i) * .2))
-            if result:
-                # Entry(self.Config_win, textvariable = StringVar(self.Config_win, value= result[Values.index(i)+1])).grid(row = Values.index(i), column = 2, padx= 5, pady=(0,10))
-                Entry(self.Config_win, textvariable = StringVar(self.Config_win, value= result[Values.index(i)+1]), width=27).place(anchor = CENTER, relx = .6, rely = .1 + (Values.index(i) * .2))
-                
+            if ConfigData:
+                Entry(self.Config_win, textvariable = StringVar(self.Config_win, value= ConfigData[Values.index(i)+1]), width=50).place(anchor = CENTER, relx = .6, rely = .1 + (Values.index(i) * .2))
             else:
-                # Entry(self.Config_win).grid(row = Values.index(i),  column = 2, sticky = W, padx= 5, pady=(0,10), ANCHOR = CENTER)
-                Entry(self.Config_win).place(anchor = CENTER, relx = .6, rely = .1 + (Values.index(i) * .2))
+                Entry(self.Config_win, width=50).place(anchor = CENTER, relx = .6, rely = .1 + (Values.index(i) * .2))
         
+        Entries = [i for i in self.Config_win.children.values() if type(i) == Entry]
+        RutaEntry = Entries[3]
+        RutaEntry.config(state = DISABLED)
+        self.getPath()
+        if self.Path:
+            RutaEntry['textvariable'] = StringVar(self.Config_win, value = self.Path)
+        else:
+            RutaEntry['textvariable'] = StringVar(self.Config_win, value = os.getcwd())
+        RutaEntry.bind("<Button-1>", lambda x: browsedir())
+        
+        Boton1 = Button(self.Config_win, text = 'Guardar', command = lambda: agg())
+        Boton1.place(anchor = CENTER, relx = .5, rely = .9)
+
         def agg():
-            # Get data from entries created by place loop tkinter
-            data = [i.get() for i in self.Config_win.children.values() if type(i) == Entry]
+            data = [i.get() for i in Entries]
             Nombres, Apellidos, Paralelo, Ruta = data
    
-            if not Nombres or not Apellidos or not Paralelo or not Ruta:
-                return messagebox.showerror("Error", "Verifique que todos los campos esten llenos")
-            if result:
+            if not Nombres or not Apellidos or not Paralelo:
+                return messagebox.showerror("Error", "Verifique que los campos de Nombres, Apellidos y Paralelo no esten vacios")
+            if ConfigData:
                 query = f'UPDATE Configuracion SET Nombres = ?, Apellidos = ?, Paralelo = ?, Ruta = ? WHERE Id = ?'
-                self.run_query(query, (Nombres, Apellidos, Paralelo, Ruta, result[0]))
+                self.run_query(query, (Nombres, Apellidos, Paralelo, Ruta, ConfigData[0]))
                 self.Config_win.destroy()
             else: 
                 query = f'INSERT INTO Configuracion VALUES(NULL, ?, ?, ?, ?)'
                 self.run_query(query, (Nombres, Apellidos, Paralelo, Ruta))
                 self.Config_win.destroy()
-                
-        # get a entry using the text variable tkinter
-        RutaEntry = [i for i in self.Config_win.children.values() if type(i) == Entry][3]
         def browsedir():
             Dirname = filedialog.askdirectory()
-            RutaEntry.delete(0, END)
-            RutaEntry.insert(END, Dirname) # add this
-            
-        # Button(self.Config_win, text = "Examinar", command = lambda: browsedir(), height= 0.5, width=3).place(anchor = CENTER, relx = .8, rely = .1 + (Values.index("Ruta:") * .2))
-        RutaEntry.bind("<Button-1>", lambda x: browsedir())
-        Boton1 = Button(self.Config_win, text = 'Guardar', command = lambda: agg())
-        Boton1.place(anchor = CENTER, relx = .5, rely = .9)
+            if Dirname:
+                RutaEntry["textvariable"] = StringVar(self.Config_win, value = Dirname)
         
     def update(self, event):
         query = self.entry.get()
@@ -158,6 +179,7 @@ class APP:
         query = 'SELECT * FROM Materias'
         db_rows = self.run_query(query)
         for row in db_rows:
+            print(row[1])
             self.tree.insert('', 0, text = row[0], values = row[1], tags=('datatw'))
     def clearTw(self):
         records = self.tree.get_children()
@@ -175,6 +197,7 @@ class APP:
         self.Add_win = Toplevel()
         self.Add_win.resizable(width=False, height=False)
         self.Add_win.title = 'Agregar Materia'
+        self.Add_win.geometry('300x100')
         # self.Add_win.iconbitmap("Archivos/imgs/Icono.ico")
         def agg(Value):
             if not Value:
@@ -183,12 +206,13 @@ class APP:
             self.run_query(query, (Value, ))
             self.Add_win.destroy()
             self.FillTw()
+            self.CreateDirs()
         LMateria = Label(self.Add_win, text = 'Materia: ')
-        LMateria.grid(row = 0, column = 0, sticky = W + E)
+        LMateria.place(anchor = CENTER, relx = .2, rely = .3)
         CMateria = Entry(self.Add_win, width=30)
-        CMateria.grid(row = 0, column = 1)
+        CMateria.place(anchor = CENTER, relx = .6, rely = .3)
         Boton = Button(self.Add_win, text = 'Agregar', command = lambda: agg(CMateria.get()))
-        Boton.grid(row = 1, column = 0, columnspan = 2, sticky = W + E)
+        Boton.place(anchor = CENTER, relx = .5, rely = .7)
     def createDB(self):
         conn = sql.connect(self.db_name)
         conn.commit()
