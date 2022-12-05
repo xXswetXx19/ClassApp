@@ -6,9 +6,9 @@ import sqlite3 as sql
 from docxtpl import DocxTemplate
 from datetime import datetime as date
 import os
+import subprocess
 
-# Global Variables
-db_name = "database.db"
+
 # Global fuctions
 def run_query(query, parametros = ()):
     with sql.connect(db_name) as conn:
@@ -17,6 +17,7 @@ def run_query(query, parametros = ()):
         conn.commit()
     return result
 def getPath():
+    global Path
     Path = run_query("SELECT Ruta FROM Configuracion").fetchone()
     Path = Path[0] if Path else os.getcwd()
     return Path
@@ -25,6 +26,8 @@ def getMaterias():
     Materias = run_query(query).fetchall()
     Materias = [i[0] for i in Materias]
     return Materias
+# Global Variables
+db_name = "database.db"
 
 # Clasess
 class APP:
@@ -74,7 +77,7 @@ class APP:
             Button(self.frame, text = list(ButtonsData.keys())[i], command = list(ButtonsData.values())[i], width=30, height=2).grid(row = i, column = 0, sticky = W + E)
         # Startup Functions
         self.FillTw()
-        self.Path = getPath()
+        getPath()
         self.updateList()
     # Global Functions
     def updateList(self):
@@ -82,11 +85,11 @@ class APP:
         self.entry['completevalues'] = self.Materias
     def CreateDirs(self):
         Materias = getMaterias()
-        if not os.path.exists(f"{self.Path}\Tareas"):
-            os.mkdir(f"{self.Path}\Tareas")
+        if not os.path.exists(f"{Path}\Tareas"):
+            os.mkdir(f"{Path}\Tareas")
         for Materia in Materias:
-            if not os.path.exists(f"{self.Path}\Tareas\{Materia}"):
-                os.mkdir(f"{self.Path}\Tareas\{Materia}")
+            if not os.path.exists(f"{Path}\Tareas\{Materia}"):
+                os.mkdir(f"{Path}\Tareas\{Materia}")
     # MAIN FUCTIONS     
     def update(self, event):
         query = self.entry.get()
@@ -121,7 +124,7 @@ class APP:
             Id, Nombres, Apellidos, Paralelo, Ruta = DatosConfig
         else:
             return messagebox.showerror("Error", "Agregue sus datos en la configuracion para crear una tarea")
-        if not os.path.exists(f"{self.Path}\Tareas\{Materia}"):
+        if not os.path.exists(f"{Path}\Tareas\{Materia}"):
             self.CreateDirs()
         Fecha = date.strftime(date.now(), '%d.%m.%Y')
         Hora = date.strftime(date.now(), '%H.%M.%S')
@@ -144,7 +147,7 @@ class APP:
          'PARALELO': Paralelo,
          })
         Document_Name_Format = f"Tarea-{Fecha}-{Num}.docx"
-        Document_Path = rf'{self.Path}/Tareas/{Materia}/{Document_Name_Format}'
+        Document_Path = rf'{Path}/Tareas/{Materia}/{Document_Name_Format}'
         doc.save(Document_Path)
         # open the file
         os.startfile(Document_Path)
@@ -267,8 +270,8 @@ class ConfigWin:
         self.Entries = [i for i in self.Config_win.children.values() if type(i) == Entry]
         self.RutaEntry = self.Entries[3]
         self.RutaEntry.config(state = DISABLED)
-        self.Path = getPath()
-        self.RutaEntry['textvariable'] = StringVar(self.Config_win, value = self.Path)
+        getPath()
+        self.RutaEntry['textvariable'] = StringVar(self.Config_win, value = Path)
         self.RutaEntry.bind("<Button-1>", lambda x: self.browsedir())
         
         Boton1 = Button(self.Config_win, text = 'Guardar', command = lambda: self.agg())
@@ -283,10 +286,12 @@ class ConfigWin:
             query = f'UPDATE Configuracion SET Nombres = ?, Apellidos = ?, Paralelo = ?, Ruta = ? WHERE Id = ?'
             run_query(query, (Nombres.strip(), Apellidos.strip(), Paralelo.strip(), Ruta, self.ConfigData[0]))
             self.Config_win.destroy()
+            getPath()
         else: 
             query = f'INSERT INTO Configuracion VALUES(NULL, ?, ?, ?, ?)'
             run_query(query, (Nombres, Apellidos, Paralelo, Ruta))
             self.Config_win.destroy()
+            getPath()
     def browsedir(self):
         Dirname = filedialog.askdirectory()
         if Dirname:
@@ -298,7 +303,7 @@ class WinHomeworks:
         self.view_wins = toplevel
 
         self.Materias = getMaterias()
-        self.Path = getPath()
+        getPath()
         self.view_frame = Frame(self.view_wins, bg = "#E4DFEC")
         self.view_frame.pack(expand = True, fill = BOTH)
 
@@ -341,15 +346,18 @@ class WinHomeworks:
         self.view_tree.column("#4",minwidth=100,width=150, anchor= CENTER)
 
         self.view_buttons_frame = Frame(self.view_frame, bg = "BLUE")
-        self.view_buttons_frame.grid(row= 2, column = 0, columnspan=2)
+        self.view_buttons_frame.grid(row= 2, column = 0, columnspan=3)
 
-        self.view_buttons_frame.columnconfigure(0, minsize=325)
-        self.view_buttons_frame.columnconfigure(1, minsize=325)
+        self.view_buttons_frame.columnconfigure(0, minsize=216)
+        self.view_buttons_frame.columnconfigure(1, minsize=216)
+        self.view_buttons_frame.columnconfigure(2, minsize=216)
 
-        self.view_button = Button(self.view_buttons_frame, text = "Abrir", command = self.OpenHomework, width=10, height=1)
-        self.view_button.grid(row = 0, column = 0, sticky = W + E)
         self.view_button2 = Button(self.view_buttons_frame, text = "Eliminar", command = self.DeleteHomework, width=10, height=1)
-        self.view_button2.grid(row = 0, column = 1, sticky = W + E)
+        self.view_button2.grid(row = 0, column = 0, sticky = W + E)
+        self.view_button3= Button(self.view_buttons_frame, text = "Ubicacion", command = self.OpenPath, width=10, height=1)
+        self.view_button3.grid(row = 0, column = 1, sticky = W + E)
+        self.view_button = Button(self.view_buttons_frame, text = "Abrir", command = self.OpenHomework, width=10, height=1)
+        self.view_button.grid(row = 0, column = 2, sticky = W + E)
         self.view_tree.tag_configure('Tareas', font=("", 10), foreground = 'Black')
         # Startup functions
         self.getHomeworks()  
@@ -383,11 +391,11 @@ class WinHomeworks:
             self.getHomeworks()
     def getHomeworks(self):
         self.clearviewTw()
-        if os.path.exists(f"{self.Path}\Tareas"):
-            Classdirs = os.listdir(f"{self.Path}\Tareas")
+        if os.path.exists(f"{Path}\Tareas"):
+            Classdirs = os.listdir(f"{Path}\Tareas")
             for ClassDir in Classdirs:
-                if os.path.isdir(f"{self.Path}\Tareas\{ClassDir}"):
-                    Homeworks = os.scandir(f"{self.Path}\Tareas\{ClassDir}")
+                if os.path.isdir(f"{Path}\Tareas\{ClassDir}"):
+                    Homeworks = os.scandir(f"{Path}\Tareas\{ClassDir}")
                     for Homework in Homeworks:
                         timestamp = os.path.getctime(Homework.path)
                         Date = date.fromtimestamp(timestamp).strftime('%d/%m/%Y')
@@ -402,7 +410,7 @@ class WinHomeworks:
             return messagebox.showerror("Error", "No se ha seleccionado ninguna tarea")
         ask = messagebox.askyesno("¿Esta seguro de eliminar la tarea?", "¿Esta seguro de eliminar la tarea?")
         if ask:
-            os.remove(f"{self.Path}\Tareas\{Class}\{Homework}")
+            os.remove(f"{Path}\Tareas\{Class}\{Homework}")
             self.view_tree.delete(self.view_tree.selection())
         else:      return
     def OpenHomework(self):
@@ -411,7 +419,17 @@ class WinHomeworks:
             Class = self.view_tree.item(self.view_tree.selection())['values'][0]
         except:
             return messagebox.showerror("Error", "No se ha seleccionado ninguna tarea")
-        os.startfile(f"{self.Path}\Tareas\{Class}\{Homework}")
+        os.startfile(f"{Path}\Tareas\{Class}\{Homework}")
+    def OpenPath(self):
+        try:
+            Homework = self.view_tree.item(self.view_tree.selection())['text'].split("'")[1]
+            Class = self.view_tree.item(self.view_tree.selection())['values'][0]
+        except:
+            return messagebox.showerror("Error", "No se ha seleccionado ninguna tarea")
+        FilePath = f"{Path}\Tareas\{Class}"
+        # Open the path in windows explorer
+        subprocess.Popen(rf'explorer /select,"{FilePath}"')
+
     #00/00/0000
     def dateformat(self,event):
         query = self.view_DateEntry.get()
