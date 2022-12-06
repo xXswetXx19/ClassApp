@@ -37,6 +37,7 @@ class APP:
         self.master.title("Gestor de tareas")
         self.master.geometry("521x245")
         self.master.resizable(0,0)
+        self.master.iconbitmap("Icono.ico")
         # self.master.config(bg = "#E4DFEC")
         self.master.bind('<KeyPress>', self.update)
         self.master.bind("<FocusIn>", self.update)
@@ -176,17 +177,21 @@ class APP:
         self.FillTw()
 
     def addMateria(self):
+        if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
+            if self.Add_win.winfo_exists() if self.Add_win.winfo_exists() else False:
+                messagebox.showerror("Error", "Ya hay una ventana")
+                return self.Add_win.lift() 
         self.Add_win = Toplevel()
         self.Add_win.resizable(width=False, height=False)
         self.Add_win.title = 'Agregar Materia'
         self.Add_win.geometry('300x100')
-        # self.Add_win.iconbitmap("Archivos/imgs/Icono.ico")
+        self.Add_win.iconbitmap("Icono.ico")
         def agg(Value):
             Value = Value.strip().capitalize()
             if not Value:
                 return messagebox.showerror("Error", "No se puede agregar un campo vacio")
             
-            if not Value.replace(" ","").isalnum():
+            if not Value.replace(" ","").isalnum(): # Revisa que value solo tenga numeros y letras, nada de simbolos
                 return messagebox.showerror("Error", "El nombre de la materia solo puede contener letras y numeros")
             if run_query(f"SELECT * FROM Materias WHERE Materia = ?", (Value,)).fetchone():
                 return messagebox.showerror("Error", "La materia ya existe")
@@ -240,19 +245,31 @@ class APP:
         conn.commit()
         conn.close()
     def VerTareas(self):
+        if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
+            if self.view_wins.winfo_exists() if self.view_wins.winfo_exists() else False:
+                messagebox.showerror("Error", "Ya hay un visualizador de tareas abierto")
+                return self.view_wins.lift() 
+
         self.view_wins = Toplevel(self.master)
         self.view_win_functions = WinHomeworks(self.view_wins)
         self.view_wins.title("Tareas")
         self.view_wins.geometry("650x275")
         self.view_wins.resizable(0,0)
         self.view_wins.config(bg = "")
+        self.view_wins.iconbitmap("Icono.ico")
     def configuration(self):
+        if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
+            if self.config_win.winfo_exists() if self.config_win.winfo_exists() else False:
+                messagebox.showerror("Error", "Ya hay una ventana de configuracion abierta")
+                # self.config_win.focus_force()
+                return self.config_win.lift() 
         self.config_win = Toplevel(self.master)
         self.config_win_functions = ConfigWin(self.config_win)
         self.config_win.resizable(width=False, height=False)
         self.config_win.title = 'Configuración'
         self.config_win.geometry('500x150')
-        # self.Config_win.iconbitmap("Archivos/imgs/Icono.ico")
+        self.config_win.iconbitmap("Icono.ico")
+        
 class ConfigWin:
     def __init__(self, toplevel):
         self.Config_win = toplevel
@@ -301,7 +318,7 @@ class WinHomeworks:
     db_name = 'database.db'
     def __init__(self, toplevel):
         self.view_wins = toplevel
-
+        
         self.Materias = getMaterias()
         getPath()
         self.view_frame = Frame(self.view_wins, bg = "#E4DFEC")
@@ -426,9 +443,8 @@ class WinHomeworks:
             Class = self.view_tree.item(self.view_tree.selection())['values'][0]
         except:
             return messagebox.showerror("Error", "No se ha seleccionado ninguna tarea")
-        FilePath = f"{Path}\Tareas\{Class}"
-        # Open the path in windows explorer
-        subprocess.Popen(rf'explorer /select,"{FilePath}"')
+        HomeWorkPath = f"{Path}\\Tareas\\{Class}\\{Homework}".replace("/", "\\") 
+        subprocess.Popen(r'explorer /select,"{FilePath}"'.format(FilePath=HomeWorkPath))
 
     #00/00/0000
     def dateformat(self,event):
