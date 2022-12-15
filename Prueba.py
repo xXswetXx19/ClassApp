@@ -8,8 +8,45 @@ from datetime import datetime as date
 import os
 import subprocess
 
+# Global Variables
+db_name = "database.db"
 
-# Global fuctions
+def createDB():
+    conn = sql.connect(db_name)
+    conn.commit()
+    conn.close()
+def createTable1():
+    conn = sql.connect(db_name)
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS Materias (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            Materia text)"""
+    )
+    conn.commit()
+    conn.close()
+def createTable2():
+    conn = sql.connect(db_name)
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS Cantidad (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            Fecha text, 
+            cantidad text)""")
+    conn.commit()
+    conn.close()
+def createTable3():
+    conn = sql.connect(db_name)
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS Configuracion (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            Nombres text, 
+            Apellidos text,
+            Paralelo text,
+            Ruta text)""")
+    conn.commit()
+    conn.close()
 def run_query(query, parametros = ()):
     with sql.connect(db_name) as conn:
         cursor = conn.cursor()
@@ -26,8 +63,26 @@ def getMaterias():
     Materias = run_query(query).fetchall()
     Materias = [i[0] for i in Materias]
     return Materias
-# Global Variables
-db_name = "database.db"
+
+# Startup Functions
+createDB()
+createTable1()
+createTable2()
+createTable3()
+
+
+class Tarea:
+    def __init__(self, Materia, Fecha, Descripcion, Prioridad):
+        self.Materia = Materia     
+        self.Descripcion = Descripcion
+        self.Prioridad = Prioridad
+        self.Fecha = Fecha
+    def __str__(self) -> str:
+        return f"{self.Materia} + {self.Fecha} + {self.Prioridad}"
+class TareaGrupal(Tarea):
+    def __init__(self, Materia, Fecha, Descripcion, Integrantes):
+        super().__init__(Materia = Materia, Fecha = Fecha, Descripcion = Descripcion)
+        self.Integrantes = Integrantes
 
 # Clasess
 class APP:
@@ -35,17 +90,12 @@ class APP:
         # Window config
         self.master = master
         self.master.title("Gestor de tareas")
-        self.master.geometry("521x245")
+        self.master.geometry("521x248")
         self.master.resizable(0,0)
         self.master.iconbitmap("Icono.ico")
-        # self.master.config(bg = "#E4DFEC")
-        self.master.bind('<KeyPress>', self.update)
-        self.master.bind("<FocusIn>", self.update)
-        # Databases functions if not exist
-        self.createDB()
-        self.createTable1()
-        self.createTable2()
-        self.createTable3()
+        # Event binds
+        self.master.bind('<KeyPress>', self.__update)
+        self.master.bind("<FocusIn>", self.__update)
         # Creating Frames
         self.TWframe = Frame(self.master)
         self.frame = Frame(self.master)
@@ -53,7 +103,7 @@ class APP:
         self.TWframe.pack(expand = True, fill = BOTH, side=LEFT)
         self.frame.pack(expand=True, fill=BOTH, side=LEFT)
         # Creating Search Bar and placing it
-        self.entry = ac.AutocompleteCombobox(self.TWframe, width=25, font=('Times', 17),completevalues = ())
+        self.entry = ac.AutocompleteCombobox(self.TWframe, width=25,completevalues = lambda: getMaterias)
         self.entry.grid(row = 0, column = 0,sticky = W + E)
         # Creating Treeview and placing it
         self.tree = ttk.Treeview(self.TWframe, height= 10,columns = 2)
@@ -68,6 +118,8 @@ class APP:
         ButtonsData = {
             "Crear Tarea": self.CreateTarea,
             "Ver Tareas": self.VerTareas,
+            "Calendario": (),
+            "Agendar Tarea": (),
             "Configuracion": self.configuration,
             "Agregar Materia": self.addMateria,
             "Eliminar Materia": self.removeMateria,
@@ -75,13 +127,12 @@ class APP:
         }
         # Creating Buttons
         for i in range(len(ButtonsData.keys())):
-            Button(self.frame, text = list(ButtonsData.keys())[i], command = list(ButtonsData.values())[i], width=30, height=2).grid(row = i, column = 0, sticky = W + E)
+            Button(self.frame, text = list(ButtonsData.keys())[i], command = list(ButtonsData.values())[i], width=30).pack(fill=BOTH, expand=True)
         # Startup Functions
         self.FillTw()
         getPath()
-        self.updateList()
-    # Global Functions
-    def updateList(self):
+        self.__updateList()
+    def __updateList(self):
         self.Materias = getMaterias()
         self.entry['completevalues'] = self.Materias
     def CreateDirs(self):
@@ -90,9 +141,8 @@ class APP:
             os.mkdir(f"{Path}\Tareas")
         for Materia in Materias:
             if not os.path.exists(f"{Path}\Tareas\{Materia}"):
-                os.mkdir(f"{Path}\Tareas\{Materia}")
-    # MAIN FUCTIONS     
-    def update(self, event):
+                os.mkdir(f"{Path}\Tareas\{Materia}") 
+    def __update(self, event):
         query = self.entry.get()
         selections = []
         if event.keysym == "BackSpace":
@@ -100,7 +150,7 @@ class APP:
                 query = query.replace(query.selection_get(), "")
         else:
             query = query[:-1]
-        if event.char.isalpha() and query == "":
+        if event.char.isalnum() and query == "":
             query += event.char
         if query != "":
             self.FillTw()
@@ -121,18 +171,14 @@ class APP:
         except:
             return messagebox.showerror("Error", "Seleccione una materia")
         DatosConfig = run_query("SELECT * FROM Configuracion").fetchone()
-        if DatosConfig:
-            Id, Nombres, Apellidos, Paralelo, Ruta = DatosConfig
-        else:
+        if not DatosConfig:
             return messagebox.showerror("Error", "Agregue sus datos en la configuracion para crear una tarea")
+        Id, Nombres, Apellidos, Paralelo, Ruta = DatosConfig   
         if not os.path.exists(f"{Path}\Tareas\{Materia}"):
             self.CreateDirs()
         Fecha = date.strftime(date.now(), '%d.%m.%Y')
-        Hora = date.strftime(date.now(), '%H.%M.%S')
-        query = f"SELECT cantidad FROM Cantidad WHERE Fecha = ?"
-        Nums = run_query(query, (Fecha,))
+        Nums = run_query(f"SELECT cantidad FROM Cantidad WHERE Fecha = ?", (Fecha,))
         Result = list(Nums)
-
         if len(Result) > 0:
             Num = int(Result[0][0]) + 1
             run_query(f"UPDATE Cantidad SET cantidad = ? WHERE Fecha = ?", (Num, Fecha))
@@ -140,27 +186,18 @@ class APP:
             run_query(f"INSERT INTO Cantidad VALUES (NULL, ?, ?)", (Fecha, 1))
             Num = 1
         doc = DocxTemplate("plantilla.docx")
-        doc.render(
-        {'MATERIA': Materia, 
-         'FECHA': Fecha.replace(".", "/"),
-         'NOMBRES': Nombres,
-         'APELLIDOS': Apellidos,
-         'PARALELO': Paralelo,
-         })
-        Document_Name_Format = f"Tarea-{Fecha}-{Num}.docx"
-        Document_Path = rf'{Path}/Tareas/{Materia}/{Document_Name_Format}'
+        doc.render({ 'MATERIA': Materia, 'FECHA': Fecha.replace(".", "/"), 'NOMBRES': Nombres, 'APELLIDOS': Apellidos, 'PARALELO': Paralelo })
+        Document_Path = rf'{Path}/Tareas/{Materia}/Tarea-{Fecha}-{Num}.docx'
         doc.save(Document_Path)
-        # open the file
         os.startfile(Document_Path)
-        # updating the view_treeviewer if the view_win is open
         try:
-            self.view_win_functions.getHomeworks() 
+            self.view_win_functions.getHomeworks()
         except:
             pass
+
     def FillTw(self):
         self.clearTw()
-        query = 'SELECT * FROM Materias'
-        db_rows = run_query(query)
+        db_rows = run_query('SELECT * FROM Materias')
         for row in db_rows:
             Materia = (row[1],)
             self.tree.insert('', 0, text = row[0], values = Materia, tags=('Materias'))
@@ -172,10 +209,8 @@ class APP:
         Id = self.tree.item(self.tree.selection())['text']
         if not Id:
             return messagebox.showerror("Error", "Seleccione una materia")
-        query = f"DELETE FROM Materias WHERE Id = ?"
-        run_query(query, (Id,))
+        run_query(f"DELETE FROM Materias WHERE Id = ?", (Id,))
         self.FillTw()
-
     def addMateria(self):
         if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
             if self.Add_win.winfo_exists() if self.Add_win.winfo_exists() else False:
@@ -190,99 +225,51 @@ class APP:
             Value = Value.strip().capitalize()
             if not Value:
                 return messagebox.showerror("Error", "No se puede agregar un campo vacio")
-            
             if not Value.replace(" ","").isalnum(): # Revisa que value solo tenga numeros y letras, nada de simbolos
                 return messagebox.showerror("Error", "El nombre de la materia solo puede contener letras y numeros")
             if run_query(f"SELECT * FROM Materias WHERE Materia = ?", (Value,)).fetchone():
                 return messagebox.showerror("Error", "La materia ya existe")
-            query = f'INSERT INTO Materias VALUES(NULL, (?))'
-            run_query(query, (Value, ))
+            run_query(f'INSERT INTO Materias VALUES(NULL, (?))', (Value, ))
             self.Add_win.destroy()
             self.FillTw()
             self.CreateDirs()
-            self.updateList()
-        LMateria = Label(self.Add_win, text = 'Materia: ')
-        LMateria.place(anchor = CENTER, relx = .2, rely = .3)
-        CMateria = Entry(self.Add_win, width=30)
-        CMateria.place(anchor = CENTER, relx = .6, rely = .3)
-        Boton = Button(self.Add_win, text = 'Agregar', command = lambda: agg(CMateria.get()))
-        Boton.place(anchor = CENTER, relx = .5, rely = .7)
+            self.__updateList()
+        LMateria = Label(self.Add_win, text = 'Materia: ').place(anchor = CENTER, relx = .2, rely = .3)
+        CMateria = Entry(self.Add_win, width=30).place(anchor = CENTER, relx = .6, rely = .3)
+        Boton = Button(self.Add_win, text = 'Agregar', command = lambda: agg(CMateria.get())).place(anchor = CENTER, relx = .5, rely = .7)
         self.Add_win.bind('<Return>', lambda event: agg(CMateria.get()))
-    def createDB(self):
-        conn = sql.connect(db_name)
-        conn.commit()
-        conn.close()
-    def createTable1(self):
-        conn = sql.connect(db_name)
-        cursor = conn.cursor()
-        cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS Materias (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                Materia text)"""
-        )
-        conn.commit()
-        conn.close()
-    def createTable2(self):
-        conn = sql.connect(db_name)
-        cursor = conn.cursor()
-        cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS Cantidad (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                Fecha text, 
-                cantidad text)""")
-        conn.commit()
-        conn.close()
-    def createTable3(self):
-        conn = sql.connect(db_name)
-        cursor = conn.cursor()
-        cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS Configuracion (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                Nombres text, 
-                Apellidos text,
-                Paralelo text,
-                Ruta text)""")
-        conn.commit()
-        conn.close()
     def VerTareas(self):
         if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
             if self.view_wins.winfo_exists() if self.view_wins.winfo_exists() else False:
                 messagebox.showerror("Error", "Ya hay un visualizador de tareas abierto")
                 return self.view_wins.lift() 
-
         self.view_wins = Toplevel(self.master)
         self.view_win_functions = WinHomeworks(self.view_wins)
-        self.view_wins.title("Tareas")
-        self.view_wins.geometry("650x275")
-        self.view_wins.resizable(0,0)
-        self.view_wins.config(bg = "")
-        self.view_wins.iconbitmap("Icono.ico")
     def configuration(self):
         if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
-            if self.config_win.winfo_exists() if self.config_win.winfo_exists() else False:
+            if (self.config_win.winfo_exists() if self.config_win.winfo_exists() else False):
                 messagebox.showerror("Error", "Ya hay una ventana de configuracion abierta")
-                # self.config_win.focus_force()
                 return self.config_win.lift() 
         self.config_win = Toplevel(self.master)
-        self.config_win_functions = ConfigWin(self.config_win)
-        self.config_win.resizable(width=False, height=False)
-        self.config_win.title = 'Configuración'
-        self.config_win.geometry('500x150')
-        self.config_win.iconbitmap("Icono.ico")
-        
+        ConfigWin(self.config_win)
+
 class ConfigWin:
     def __init__(self, toplevel):
         self.Config_win = toplevel
-        query = 'SELECT * FROM Configuracion'
-        self.ConfigData = run_query(query).fetchone()
-        Values = ["Nombres:", "Apellidos:", "Paralelo:", "Ruta:"]
+        self.Config_win.resizable(width=False, height=False)
+        self.Config_win.title = 'Configuración'
+        self.Config_win.geometry('500x150')
+        self.Config_win.iconbitmap("Icono.ico")
+         
+        self.ConfigData = run_query('SELECT * FROM Configuracion').fetchone()
+        Datos = ["Nombres:", "Apellidos:", "Paralelo:", "Ruta:"]
         
-        for i in Values:
-            Label(self.Config_win, text = i).place(anchor = W, relx = .1, rely = .1 + (Values.index(i) * .2))
+        for i in Datos:
+            Label(self.Config_win, text = i).place(anchor = W, relx = .1, rely = .1 + (Datos.index(i) * .2))
             if self.ConfigData:
-                Entry(self.Config_win, textvariable = StringVar(self.Config_win, value= self.ConfigData[Values.index(i)+1]), width=50).place(anchor = CENTER, relx = .6, rely = .1 + (Values.index(i) * .2))
+                Entry(self.Config_win, textvariable = StringVar(self.Config_win, value= self.ConfigData[Datos.index(i)+1]), width=50).place(anchor = CENTER, relx = .6, rely = .1 + (Datos.index(i) * .2))
             else:
-                Entry(self.Config_win, width=50).place(anchor = CENTER, relx = .6, rely = .1 + (Values.index(i) * .2))
+                Entry(self.Config_win, width=50).place(anchor = CENTER, relx = .6, rely = .1 + (Datos.index(i) * .2))
         
         self.Entries = [i for i in self.Config_win.children.values() if type(i) == Entry]
         self.RutaEntry = self.Entries[3]
@@ -300,27 +287,30 @@ class ConfigWin:
         if not Nombres or not Apellidos or not Paralelo:
             return messagebox.showerror("Error", "Verifique que los campos de Nombres, Apellidos y Paralelo no esten vacios")
         if self.ConfigData:
+            Id = self.ConfigData[0]
             query = f'UPDATE Configuracion SET Nombres = ?, Apellidos = ?, Paralelo = ?, Ruta = ? WHERE Id = ?'
-            run_query(query, (Nombres.strip(), Apellidos.strip(), Paralelo.strip(), Ruta, self.ConfigData[0]))
+            run_query(query, (Nombres.strip(), Apellidos.strip(), Paralelo.strip(), Ruta, Id))
             self.Config_win.destroy()
-            getPath()
         else: 
             query = f'INSERT INTO Configuracion VALUES(NULL, ?, ?, ?, ?)'
             run_query(query, (Nombres, Apellidos, Paralelo, Ruta))
             self.Config_win.destroy()
-            getPath()
+        getPath()
     def browsedir(self):
         Dirname = filedialog.askdirectory()
         if Dirname:
             self.RutaEntry["textvariable"] = StringVar(self.Config_win, value = Dirname)  
 
 class WinHomeworks:
-    db_name = 'database.db'
     def __init__(self, toplevel):
         self.view_wins = toplevel
-        
+        self.view_wins.title("Tareas")
+        self.view_wins.geometry("650x275")
+        self.view_wins.resizable(0,0)
+        self.view_wins.config(bg = "")
+        self.view_wins.iconbitmap("Icono.ico")
         self.Materias = getMaterias()
-        getPath()
+        
         self.view_frame = Frame(self.view_wins, bg = "#E4DFEC")
         self.view_frame.pack(expand = True, fill = BOTH)
 
@@ -330,18 +320,12 @@ class WinHomeworks:
         self.view_ClasesEntry = Combobox(self.view_topframes, width=10, font=('', 12), values = self.Materias)
         self.view_ClasesEntry.grid(row = 0, column = 0,sticky = W + E)
 
-        self.view_NumEntry = Entry(self.view_topframes, width=10, font=('', 12))
-        self.view_NumEntry.grid(row = 0, column = 1,sticky = W + E)
-        self.view_DateEntry = Entry(self.view_topframes, width=10, font=('', 12))
-        self.view_DateEntry.grid(row = 0, column = 2,sticky = W + E)
-        self.view_HourEntry = Entry(self.view_topframes, width=10, font=('', 12))
-        self.view_HourEntry.grid(row = 0, column = 3,sticky = W + E)
-
         self.view_topframes.columnconfigure(0, minsize=200)
         self.view_topframes.columnconfigure(1, minsize=150)
         self.view_topframes.columnconfigure(2, minsize=150)
         self.view_topframes.columnconfigure(3, minsize=150)
-
+        for i in range(3):
+            Entry(self.view_topframes, width=10, font=('', 12)).grid(row = 0, column = i + 1,sticky = W + E)
         # Getting the entries from a frame and giving events to them
         self.entries = [i for i in self.view_topframes.children.values() if type(i) == Entry or type(i) == Combobox]
         for index, entrie in enumerate(self.entries):
@@ -364,19 +348,18 @@ class WinHomeworks:
 
         self.view_buttons_frame = Frame(self.view_frame, bg = "BLUE")
         self.view_buttons_frame.grid(row= 2, column = 0, columnspan=3)
-
+        
         self.view_buttons_frame.columnconfigure(0, minsize=216)
         self.view_buttons_frame.columnconfigure(1, minsize=216)
         self.view_buttons_frame.columnconfigure(2, minsize=216)
 
-        self.view_button2 = Button(self.view_buttons_frame, text = "Eliminar", command = self.DeleteHomework, width=10, height=1)
-        self.view_button2.grid(row = 0, column = 0, sticky = W + E)
-        self.view_button3= Button(self.view_buttons_frame, text = "Ubicacion", command = self.OpenPath, width=10, height=1)
-        self.view_button3.grid(row = 0, column = 1, sticky = W + E)
-        self.view_button = Button(self.view_buttons_frame, text = "Abrir", command = self.OpenHomework, width=10, height=1)
-        self.view_button.grid(row = 0, column = 2, sticky = W + E)
+        ButtonsData = { "Eliminar": self.DeleteHomework, "Ubicacion": self.OpenPath, "Abrir": self.OpenHomework }
+        for i in range(len(ButtonsData.keys())):
+            Button(self.view_buttons_frame, text = list(ButtonsData.keys())[i], command= list(ButtonsData.values())[i], width=10, height=1).grid(row = 0, column = i, sticky = W + E)
+
         self.view_tree.tag_configure('Tareas', font=("", 10), foreground = 'Black')
         # Startup functions
+        getPath()
         self.getHomeworks()  
     def clearviewTw(self):
         records = self.view_tree.get_children()
@@ -391,7 +374,7 @@ class WinHomeworks:
                 query = query.replace(entry.selection_get(), "")
             else:
                 query = query[:-1]
-        if event.char.isdigit() or event.char.isalpha() and len(query) == 0:
+        if event.char.isalnum() and len(query) == 0:
             query += event.char
         if query != "":
             self.getHomeworks()
@@ -443,8 +426,6 @@ class WinHomeworks:
             return messagebox.showerror("Error", "No se ha seleccionado ninguna tarea")
         HomeWorkPath = f"{Path}\\Tareas\\{Class}\\{Homework}".replace("/", "\\") 
         subprocess.Popen(r'explorer /select,"{FilePath}"'.format(FilePath=HomeWorkPath))
-
-    #00/00/0000
 
 if __name__ == '__main__':
     root = Tk()
