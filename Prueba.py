@@ -70,7 +70,6 @@ createTable1()
 createTable2()
 createTable3()
 
-
 class Tarea:
     def __init__(self, Materia, Fecha, Descripcion, Prioridad):
         self.Materia = Materia     
@@ -85,6 +84,7 @@ class TareaGrupal(Tarea):
         self.Integrantes = Integrantes
 
 # Clasess
+
 class APP:
     def __init__(self, master):
         # Window config
@@ -235,7 +235,8 @@ class APP:
             self.CreateDirs()
             self.__updateList()
         LMateria = Label(self.Add_win, text = 'Materia: ').place(anchor = CENTER, relx = .2, rely = .3)
-        CMateria = Entry(self.Add_win, width=30).place(anchor = CENTER, relx = .6, rely = .3)
+        CMateria = Entry(self.Add_win, width=30)
+        CMateria.place(anchor = CENTER, relx = .6, rely = .3)
         Boton = Button(self.Add_win, text = 'Agregar', command = lambda: agg(CMateria.get())).place(anchor = CENTER, relx = .5, rely = .7)
         self.Add_win.bind('<Return>', lambda event: agg(CMateria.get()))
     def VerTareas(self):
@@ -427,6 +428,17 @@ class WinHomeworks:
         HomeWorkPath = f"{Path}\\Tareas\\{Class}\\{Homework}".replace("/", "\\") 
         subprocess.Popen(r'explorer /select,"{FilePath}"'.format(FilePath=HomeWorkPath))
 
+class Calendario:
+    def __init__(self, toplevel):
+        self.Calendario_win = toplevel
+        self.Calendario_win.title("Tareas")
+        self.Calendario_win.geometry("650x275")
+        self.Calendario_win.resizable(0,0)
+        self.Calendario_win.config(bg = "")
+        self.Calendario_win.iconbitmap("Icono.ico")
+        self.Materias = getMaterias()
+        
+        
 if __name__ == '__main__':
     root = Tk()
     my_menu = APP(root)
