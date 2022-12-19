@@ -1,65 +1,143 @@
 from tkinter import *
 import calendar
 
+
+class Dia(Label):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__Prioridad = 0
+        self.__Descripcion = ["Hacer mates", "Dominar el mundo", "perriar hasta el piso"]
+        
+    def setPrioridad(self, prioridad):
+        self.__Prioridad = prioridad
+    def setDescripcion(self, descripcion):
+        self.__Descripcion.append(descripcion)
+    def getPrioridad(self):
+        return self.__Prioridad
+    def getDescripcion(self):
+        return self.__Descripcion
+
+
+class Ventanita:
+    def __init__(self, label):
+        win = Toplevel()
+        win.title("Prioridad")
+        win.geometry("400x200")
+        win.resizable(0,0)
+        self.TopFrame = Frame(win, bg="blue")
+        self.ButtonsFrame = Frame(win, bg="red")
+        self.HomeworksFrame = Frame(self.TopFrame, bg="green", bd=4, relief="groove", padx=120, pady=20)
+        
+        self.TopFrame.pack(expand= True, fill=BOTH, side=TOP)
+        self.HomeworksFrame.grid(row=1, column=0, sticky=W)
+        self.ButtonsFrame.pack(expand= True, fill=BOTH, side=BOTTOM)
+
+        LTareas = Label(self.TopFrame, text="Tareas", font=("Arial", 11, "bold"), background="white")
+        LTareas.grid(row=0, column=0, sticky=W)
+        for i in range(len(label.getDescripcion())):
+            Label(self.HomeworksFrame, text=label.getDescripcion()[i], font=("Arial", 11, "bold"), background="white").grid(row=i+1, column=0, sticky=W)        
+        
+    #     # create a label for the priority
+    #     Label(top, text="Prioridad", font=("Arial", 11, "bold"), background="white").pack()
+    #     Label(top, text=label.getPrioridad(), font=("Arial", 11, "bold"), background="white").pack()
+    #     # create a label for the description
+    #     Label(top, text="Descripción", font=("Arial", 11, "bold"), background="white").pack()
+    #     for i in label.getDescripcion():
+    #         Label(top, text=i, font=("Arial", 11, "bold"), background="white").pack()
+    #     # create a button for add a new description
+    #     Button(top, text="Añadir descripción", font=("Arial", 11, "bold"), background="white", command=lambda: self.addDescripcion(label)).pack()
+    #     # create a button for add a new priority
+    #     Button(top, text="Añadir prioridad", font=("Arial", 11, "bold"), background="white", command=lambda: self.addPrioridad(label)).pack()
+    #     # create a button for delete the priority
+    #     Button(top, text="Eliminar prioridad", font=("Arial", 11, "bold"), background="white", command=lambda: self.deletePrioridad(label)).pack()
+    #     # create a button for delete the description
+    #     Button(top, text="Eliminar descripción", font=("Arial", 11, "bold"), background="white", command=lambda: self.deleteDescripcion(label)).pack()
+    # def addDescripcion(self, label):
+    #     top = Toplevel()
+    #     top.title("Añadir descripción")
+    #     top.geometry("300x300")
+    #     top.resizable(0,0)
+    #     top.config(cursor="hand2")
+    #     top.config(bd=15)
+    #     top.config(relief="groove")
+        
+    #     Label(top, text="Descripción", font=("Arial", 11, "bold"), background="white").pack()
+    #     Entry(top, textvariable=StringVar(), font=("Arial", 11, "bold"), background="white").pack()
+    #     Button(top, text="Añadir", font=("Arial", 11, "bold"), background="white", command=lambda: self.addDescripcion2(label)).pack()
+    # def addDescripcion2(self, label):
+    #     label.addDescripcion("Hola")
+    #     print(label.getDescripcion())
+    # def addPrioridad(self, label):
+    #     top = Toplevel()
+    #     top.title("Añadir prioridad")
+    #     top.geometry("300x300")
+    #     top.resizable(0,0)
+    #     top.config(cursor="hand2")
+        
+    #     Label(top, text="Prioridad", font=("Arial", 11, "bold"), background="white").pack()
+    #     Entry(top, textvariable=StringVar(), font=("Arial", 11, "bold"), background="white").pack()
+    #     Button(top, text="Añadir", font=("Arial", 11, "bold"), background="white", command=lambda: self.addPrioridad2(label)).pack()
+    # def addPrioridad2(self, label):
+    #     label.addPrioridad("Hola")
+    #     print(label.getPrioridad())
+    
+
 class Calendario:
     def __init__ (self, window):
 # Crea la ventana principal y el calendario
         self.window = window
-        self.window.geometry("545x285")
-        self.TopFrame = Frame(self.window,background="#D3D3D3", height=50)
+        self.window.geometry("755x372")
+        self.window.title("Calendario")
+        self.window.resizable(0,0)
+        self.TopFrame = Frame(self.window,background="#006064", height=50)
         self.CenterFrame = Frame(self.window, background="green", height=30)
         self.BotFrame = Frame(self.window,background="red", height=205)
-        
+        # Frames
         self.TopFrame.pack(fill = BOTH, side=TOP)
         self.CenterFrame.pack(expand= True, fill = BOTH, side=TOP)
         self.BotFrame.pack(fill=BOTH, side=BOTTOM)
+        
         # Crea el widget Calendar
         c = calendar.Calendar(firstweekday=calendar.MONDAY)
         cal = c.monthdatescalendar(2022, 12)
+
+        # Top Frame
+        self.butt1 = Label(self.TopFrame, text = "<", width= 5, height=3, font=(10), background= "#006064").pack(side = LEFT, anchor=CENTER)
+        self.butt2 = Label(self.TopFrame, text = ">", width= 5, height=3, font=(10), background= "#006064").pack(side = RIGHT, anchor=CENTER)
+        self.MesLabel = Label(self.TopFrame, text= "Diciembre",background="#006064",foreground= "#FFFFFF", font=("Arial Black", 21)).pack(anchor=CENTER, expand=True)
+
+        # Center Frame
         Dias = ("Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo")
         for i, dia in enumerate(Dias):
-            # lb = Label(self.CenterFrame, text=dia).pack(side="left", fill=BOTH, expand=True)
-            lv = Label(self.CenterFrame,background="#D3D3D3",text=dia, font="Arial 11", width=8, height=2).grid(row=0, column=i)
-            # .pack(side="left", fill= BOTH)
+            Label(self.CenterFrame,background="#006064",text=dia, font=("Arial", 11, "bold"), foreground= "#FFFFFF", width=10, height=2, border= 8).grid(row=0, column=i)
         
-        self.Button1 = Button(self.TopFrame, text="<").pack(side = LEFT, anchor=CENTER)
-        self.Button1 = Button(self.TopFrame,text=">").pack(side = RIGHT, anchor=CENTER)
-        self.MesLabel = Label(self.TopFrame, text= "Diciembre",background="#D3D3D3", font=("Arial Black", 21)).pack(anchor=CENTER, expand=True)
-
-            
+        # Bot Frame
         for i, week in enumerate(cal):
             for j, day in enumerate(week):
-        # Si el día pertenece al mes de enero de 2022, crea un botón
-                if day.month == 12:
-                    label = Label(self.BotFrame, text=day.day, bg="#eeeeee", fg="#444444", font="Arial 11", width=8, height=2)
+                if day.month == 12: # Si el día pertenece al mes de enero de 2022, crea un botón
+                    label = Dia(self.BotFrame, text=day.day, bg="#eeeeee", font="Arial 11", width=10, height=2, border=8)
                     label.grid(row=i, column=j)
                     label.bind("<Button-1>", self.on_click_1)
                     label.bind("<Button-3>", self.on_click_2)
                 else:
-                    label = Label(self.BotFrame, text=day.day, bg="#D3D3D3", fg="#444444", font="Arial 11", width=8, height=2)
+                    label = Dia(self.BotFrame, text=day.day, bg="#D3D3D3", fg="#808080", font="Arial 11", width=10, height=2, border=8)
                     label.grid(row=i, column=j)
-
-
-  
-                    
-                    
         
         self.selected_label = []
-    # Función que se ejecuta cuando se hace clic en una etiqueta del calendario
     def on_click_1(self, event):
         label = event.widget
-        if label["background"] == "red":
+        if label["background"] == "#c3c3c3":
             label.config(background="#eeeeee")
         else:
             for i in self.selected_label:
                 i.config(background="#eeeeee")
                 self.selected_label.pop()
-            print(self.selected_label)
-            label.config(background="red")
+            label.config(background="#c3c3c3")
             self.selected_label.append(label)
     def on_click_2(self,event):
         label = event.widget
-        label.config(foreground = "blue")
+        Ventanita(label)
+
 root = Tk()
 Calendario(root)
 root.mainloop()
