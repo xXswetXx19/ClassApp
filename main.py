@@ -423,7 +423,7 @@ class WinHomeworks:
             Class = self.view_tree.item(self.view_tree.selection())['values'][0]
         except:
             return messagebox.showerror("Error", "No se ha seleccionado ninguna tarea")
-        ask = messagebox.askyesno("¿Esta seguro de eliminar la tarea?", "¿Esta seguro de eliminar la tarea?")
+        ask = messagebox.askyesno("Eliminar Tarea", "¿Esta seguro de eliminar la tarea?")
         if ask:
             os.remove(f"{Path}\Tareas\{Class}\{Homework}")
             self.view_tree.delete(self.view_tree.selection())
