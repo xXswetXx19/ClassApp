@@ -121,7 +121,7 @@ class APP:
             "Crear Tarea": self.CreateTarea,
             "Ver Tareas": self.VerTareas,
             "Calendario": self.opencal,
-            "Agendar Tarea": (),
+            "Ver Pendientes": self.Pendientes,
             "Configuracion": self.configuration,
             "Agregar Materia": self.addMateria,
             "Eliminar Materia": self.removeMateria,
@@ -200,6 +200,8 @@ class APP:
             self.view_win_functions.getHomeworks()
         except:
             pass
+    def Pendientes(self):
+        VerPendientes()
 
     def FillTw(self):
         self.clearTw()
@@ -251,7 +253,7 @@ class APP:
                 messagebox.showerror("Error", "Ya hay un visualizador de tareas abierto")
                 return self.view_wins.lift() 
         self.view_wins = Toplevel(self.master)
-        self.view_win_functions = WinHomeworks(self.view_wins)
+        self.view_win_functions = HomeworksWindow(self.view_wins)
     def configuration(self):
         if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
             if (self.config_win.winfo_exists() if self.config_win.winfo_exists() else False):
@@ -308,7 +310,7 @@ class ConfigWin:
         if Dirname:
             self.RutaEntry["textvariable"] = StringVar(self.Config_win, value = Dirname)  
 
-class WinHomeworks:
+class HomeworksWindow:
     def __init__(self, toplevel):
         self.view_wins = toplevel
         self.view_wins.title("Tareas")
@@ -434,15 +436,32 @@ class WinHomeworks:
         HomeWorkPath = f"{Path}\\Tareas\\{Class}\\{Homework}".replace("/", "\\") 
         subprocess.Popen(r'explorer /select,"{FilePath}"'.format(FilePath=HomeWorkPath))
 
-class Calendario:
-    def __init__(self, toplevel):
-        self.Calendario_win = toplevel
-        self.Calendario_win.title("Tareas")
-        self.Calendario_win.geometry("650x275")
-        self.Calendario_win.resizable(0,0)
-        self.Calendario_win.config(bg = "")
-        self.Calendario_win.iconbitmap("Icono.ico")
-        self.Materias = getMaterias()
+class VerPendientes:
+    def __init__(self):
+        self.win = Toplevel()
+        self.win.title("Tareas")
+        self.win.geometry("300x400")
+        # self.win.resizable(0,0)
+        color1 = "#eeeeee"
+        self.HomeworksFrame = Frame(self.win, bg=color1, bd=4, relief="ridge", width=300, height=400)
+        self.HomeworksFrame.grid(row=1, column=0, sticky=NSEW)
+        self.listcolors = ["#ffffff", "#eeeeee", "#dddddd", "#cccccc", "#bbbbbb", "#aaaaaa", "#999999", "#888888", "#777777", "#666666", "#555555", "#444444", "#333333", "#222222", "#111111", "#000000"]
+        self.FillPending()
+    def FillPending(self):
+        for i, color in enumerate(self.listcolors):
+            Label(self.HomeworksFrame, text = "Hola", bg = color).grid(row = i, column = 0)
+
+
+        # self.view_tree = ttk.Treeview(self.win, height= 6,columns = ["#0", "#1"])
+        # self.view_tree.grid(row = 0, column = 0)
+        # self.view_tree.heading("#0", text = "ID")
+        # self.view_tree.heading("#1", text = "Descripción")
+        # self.view_tree.heading("#2", text = "Prioridad")
+        
+        # self.view_tree.column("#0", width=0,minwidth=0)
+        # self.view_tree.column("#1", width = 23, anchor=W)
+        # self.view_tree.column("#2", width = 65, anchor="center")
+            
         
         
 if __name__ == '__main__':

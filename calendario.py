@@ -202,7 +202,7 @@ class Calendario:
         # Frames
         self.TopFrame.pack(fill = BOTH, side=TOP)
         self.CenterFrame.pack(fill = BOTH, side=TOP)
-        self.BotFrame.pack(fill=BOTH, side=BOTTOM)
+        self.BotFrame.pack(fill=BOTH, side=TOP)
         
         # Mehh 
         self.Colores = {
@@ -211,6 +211,21 @@ class Calendario:
             "Alta": "#c78989",
             "Urgente": "#d32f2f"
         } 
+        
+        self.Meses = {
+            "January": "Enero",
+            "February": "Febrero",
+            "March": "Marzo",
+            "April": "Abril",
+            "May": "Mayo",
+            "June": "Junio",
+            "July": "Julio",
+            "August": "Agosto",
+            "September": "Septiembre",
+            "October": "Octubre",
+            "November": "Noviembre",
+            "December": "Diciembre"
+        }
 
         # Terracota
         # self.Colores = {
@@ -232,7 +247,7 @@ class Calendario:
         #     "Alta": "#966362",
         #     "Urgente": "#a30000"
         # }
-        #Fuertes
+        # Fuertes
         # self.Colores = {
         #     "Baja": "#00b200",
         #     "Media": "#e6a800",
@@ -246,7 +261,6 @@ class Calendario:
         #     "Alta": "#ff9933",
         #     "Urgente": "#ff3333"
         # }
-
         
         # Top Frame
         self.butt1 = Label(self.TopFrame, text = "<",width= 5, height=3, font=(10), background= "#006064", foreground= "white")
@@ -261,7 +275,6 @@ class Calendario:
         self.butt1.bind("<Leave>", lambda event: self.butt1.config(background="#006064"))
         self.butt2.bind("<Enter>", lambda event: self.butt2.config(background="#004d4d"))
         self.butt2.bind("<Leave>", lambda event: self.butt2.config(background="#006064"))
-
         # Center Frame
         Dias = ("Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo")
         for i, dia in enumerate(Dias):
@@ -269,53 +282,54 @@ class Calendario:
         # Crea el widget Calendar
         self.mes_actual = date.today().month
         self.ano_actual = date.today().year
-        self.MesLabel.config(text=date(self.ano_actual, self.mes_actual, 1).strftime("%B %Y"))
+        self.MesLabel.config(text = self.Meses[date(self.ano_actual, self.mes_actual, 1).strftime("%B")] + " " + str(self.ano_actual))
         self.filldays(self.mes_actual, self.ano_actual)
-
+        
     def filldays(self, month, year):
         c = calendar.Calendar(firstweekday=calendar.MONDAY)
         cal = c.monthdatescalendar(year, month)
         self.clearcalendar()
+        label_cant = 0
         for i, week in enumerate(cal):
             for j, date in enumerate(week):
                 if date.month == month: 
                     label = Dia(self.BotFrame, text=date.day, bg="#eeeeee", font="Arial 11", width=10, height=2, border=8, date=date)
                     label.grid(row=i, column=j)
+                    label_cant += 1
                     if len(label.getDescripcion()) > 0:
                         prioridad = label.getDescripcion()[0][1]
                         Color = self.Colores.get(prioridad)
                         label.config(background=Color)
-                    
                     label.bind("<Button-1>", self.on_click)
                     label.bind("<Button-3>", self.on_click)
                     label.bind("<Enter>", self.onover)
                     label.bind("<Leave>", self.onleave)
-
                 else:
                     label = Dia(self.BotFrame, text=date.day, bg="#D3D3D3", fg="#808080", font="Arial 11", width=10, height=2, border=8, date=date)
                     label.grid(row=i, column=j)
-
+                    label_cant += 1
                     if date.month < month and date.year == self.ano_actual or date.month < month and date.year < self.ano_actual or date.month > month and date.year < self.ano_actual:
                         label.bind("<Button-1>", self.previousmonth)
                     else:
                         label.bind("<Button-1>", self.nextmonth)
-                     
+            if label_cant > 35:
+                self.window.geometry("755x425")
+            else:   
+                self.window.geometry("755x375")                     
     def clearcalendar(self):
         for widget in self.BotFrame.winfo_children():
              widget.destroy()
-        self.selected_label = {"label": None, "Color": None}
-
     def previousmonth(self, event):
         month = self.mes_actual - 1
         if month == 0:
             self.ano_actual -= 1
             month = 12
         if type (event.widget["text"]) == int:
-            self.MesLabel.config(text=date(self.ano_actual, month, 1).strftime("%B %Y"))
+            self.MesLabel.config(text = self.Meses[date(self.ano_actual, month, 1).strftime("%B")] + " " + str(self.ano_actual))
             self.filldays(month, self.ano_actual)
         else:
             self.filldays(month, self.ano_actual)
-            self.MesLabel.config(text=date(self.ano_actual, month, 1).strftime("%B %Y"))
+            self.MesLabel.config(text = self.Meses[date(self.ano_actual, month, 1).strftime("%B")] + " " + str(self.ano_actual))
         self.mes_actual = month
     def nextmonth(self, event):
         month = self.mes_actual + 1
@@ -323,35 +337,21 @@ class Calendario:
             self.ano_actual += 1
             month = 1
         if type (event.widget["text"]) == int:
-            self.MesLabel.config(text=date(self.ano_actual, month, 1).strftime("%B %Y"))
+            self.MesLabel.config(text = self.Meses[date(self.ano_actual, month, 1).strftime("%B")] + " " + str(self.ano_actual))
             self.filldays(month, self.ano_actual)
         else:
             self.filldays(month, self.ano_actual)
-            self.MesLabel.config(text=date(self.ano_actual, month, 1).strftime("%B %Y"))
+            self.MesLabel.config(text = self.Meses[date(self.ano_actual, month, 1).strftime("%B")] + " " + str(self.ano_actual))
         self.mes_actual = month
         
     def on_click(self, event):
         label = event.widget
         Ventanita(self, label)
-        # label = event.widget
-        # if label["background"] == "#c3c3c3" and label == self.selected_label.get("label"):
-        #     label.config(background=self.selected_label.get("Color"))
-        #     self.selected_label["label"] = None
-        #     self.selected_label["Color"] = None
-        # else:
-        #     i = self.selected_label.get("label")
-        #     if i != None:
-        #         i.config(background=self.selected_label.get("Color"))
-        #     self.selected_label["label"] = label
-        #     self.selected_label["Color"] = label["background"]
-        #     label.config(background="#c3c3c3")
-            
-
     def onover(self, event):
         label = event.widget
         if label["background"] == "#eeeeee":
           label.config(background="#c3c3c3")
     def onleave(self, event):
         label = event.widget
-        if label != self.selected_label.get("label") and label["background"] == "#c3c3c3":
+        if label["background"] == "#c3c3c3":
             label.config(background="#eeeeee")
