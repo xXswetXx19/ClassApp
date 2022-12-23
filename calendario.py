@@ -83,17 +83,17 @@ class Dia(Label):
                 self.__Notas.append([Id, prioridad, descripcion])
 
 class Ventanita:
-    def __init__(self, widgetday):
+    def __init__(self, calendario, widgetday):
         win = Toplevel()
         win.title("Tareas")
         win.geometry("400x200")
         win.resizable(0,0)
         self.win = win
         self.Diaclass = widgetday
+        self.calendario = calendario
         color1 = "#eeeeee"
-        color2 = "#F5F5DC"
         self.TopFrame = Frame(win, bg=color1)
-        self.ButtonsFrame = Frame(win, bg="red")
+        self.ButtonsFrame = Frame(win)
         self.HomeworksFrame = Frame(self.TopFrame, bg=color1, bd=4, relief="ridge", width=400, height=150)
     
         self.TopFrame.pack(expand= True, fill=BOTH, side=TOP)
@@ -118,10 +118,10 @@ class Ventanita:
         self.view_tree.column("#2", width = 70, anchor="center")
         
         # Creando los tags
-        self.view_tree.tag_configure("Baja", background="#c2f0d6")
-        self.view_tree.tag_configure("Media", background="#F5E6C0")
-        self.view_tree.tag_configure("Alta", background="#E6B0AA")
-        self.view_tree.tag_configure("Urgente", background="#FF5252")
+        self.view_tree.tag_configure("Baja", background=calendario.Colores.get("Baja"))
+        self.view_tree.tag_configure("Media", background=calendario.Colores.get("Media"))
+        self.view_tree.tag_configure("Alta", background=calendario.Colores.get("Alta"))
+        self.view_tree.tag_configure("Urgente", background=calendario.Colores.get("Urgente"))
  
         Button(self.ButtonsFrame, text="Añadir Pendiente", font=("Arial", 11, "bold"), background=color1, command=self.addNota, width=20).pack(side=LEFT)
         Button(self.ButtonsFrame, text="Eliminar Pendiente", font=("Arial", 11, "bold"), background=color1, command=self.deleteNota, width=25).pack(side=RIGHT)
@@ -158,7 +158,7 @@ class Ventanita:
             month = self.Diaclass.getmonth()
             year = self.Diaclass.getyear()
             insert_db(day, month, year, Descripcion, Prioridad)
-            MainCal.filldays(month, year)
+            self.calendario.filldays(month, year)
             self.fill_tree()
             
             self.Add_win.destroy()
@@ -185,7 +185,7 @@ class Ventanita:
             Data = search_DayData(Id = Id)
             Id, dia, mes, año, Descripcion, Prioridad = Data
             delete_Nota(Id)
-            MainCal.filldays(mes, año)
+            self.calendario.filldays(mes, año)
             self.fill_tree()
 
 
@@ -198,21 +198,56 @@ class Calendario:
         self.window.resizable(0,0)
         self.TopFrame = Frame(self.window,background="#006064", height=50)
         self.CenterFrame = Frame(self.window, background="black", height=30)
-        self.BotFrame = Frame(self.window,background="red", height=205)
+        self.BotFrame = Frame(self.window, height=205)
         # Frames
         self.TopFrame.pack(fill = BOTH, side=TOP)
         self.CenterFrame.pack(fill = BOTH, side=TOP)
         self.BotFrame.pack(fill=BOTH, side=BOTTOM)
         
-
+        # Mehh 
         self.Colores = {
-            "Baja": "#c2f0d6", # M
-            "Media": "#F5E6C0",
-            "Alta": "#E6B0AA",
-            "Urgente": "#FF5252"
+            "Baja": "#99e5b1", # M
+            "Media": "#d4b98d",
+            "Alta": "#c78989",
+            "Urgente": "#d32f2f"
         } 
-        
 
+        # Terracota
+        # self.Colores = {
+        #     "Baja": "#88d8b0",
+        #     "Media": "#c9b57d",
+        #     "Alta": "#b78787",
+        #     "Urgente": "#c62828"
+        # }
+        # Puede ser
+        # self.Colores = {
+        #     "Baja": "#77bf9f",
+        #     "Media": "#b8a27c",
+        #     "Alta": "#a67676",
+        #     "Urgente": "#b71b1c"
+        # }
+        # self.Colores = {
+        #     "Baja": "#66a68f",
+        #     "Media": "#a79773",
+        #     "Alta": "#966362",
+        #     "Urgente": "#a30000"
+        # }
+        #Fuertes
+        # self.Colores = {
+        #     "Baja": "#00b200",
+        #     "Media": "#e6a800",
+        #     "Alta": "#cc3333",
+        #     "Urgente": "#ff0000"
+        # }
+        # Fuertes y claros
+        # self.Colores = {
+        #     "Baja": "#33cc33",
+        #     "Media": "#ffff00",
+        #     "Alta": "#ff9933",
+        #     "Urgente": "#ff3333"
+        # }
+
+        
         # Top Frame
         self.butt1 = Label(self.TopFrame, text = "<",width= 5, height=3, font=(10), background= "#006064", foreground= "white")
         self.butt1.pack(side = LEFT, anchor=CENTER)
@@ -251,8 +286,8 @@ class Calendario:
                         Color = self.Colores.get(prioridad)
                         label.config(background=Color)
                     
-                    label.bind("<Button-1>", self.on_click_1)
-                    label.bind("<Button-3>", self.on_click_2)
+                    label.bind("<Button-1>", self.on_click)
+                    label.bind("<Button-3>", self.on_click)
                     label.bind("<Enter>", self.onover)
                     label.bind("<Leave>", self.onleave)
 
@@ -295,23 +330,23 @@ class Calendario:
             self.MesLabel.config(text=date(self.ano_actual, month, 1).strftime("%B %Y"))
         self.mes_actual = month
         
-    def on_click_1(self, event):
+    def on_click(self, event):
         label = event.widget
-        if label["background"] == "#c3c3c3" and label == self.selected_label.get("label"):
-            label.config(background=self.selected_label.get("Color"))
-            self.selected_label["label"] = None
-            self.selected_label["Color"] = None
-        else:
-            i = self.selected_label.get("label")
-            if i != None:
-                i.config(background=self.selected_label.get("Color"))
-            self.selected_label["label"] = label
-            self.selected_label["Color"] = label["background"]
-            label.config(background="#c3c3c3")
+        Ventanita(self, label)
+        # label = event.widget
+        # if label["background"] == "#c3c3c3" and label == self.selected_label.get("label"):
+        #     label.config(background=self.selected_label.get("Color"))
+        #     self.selected_label["label"] = None
+        #     self.selected_label["Color"] = None
+        # else:
+        #     i = self.selected_label.get("label")
+        #     if i != None:
+        #         i.config(background=self.selected_label.get("Color"))
+        #     self.selected_label["label"] = label
+        #     self.selected_label["Color"] = label["background"]
+        #     label.config(background="#c3c3c3")
             
-    def on_click_2(self,event):
-        label = event.widget
-        Ventanita(label)
+
     def onover(self, event):
         label = event.widget
         if label["background"] == "#eeeeee":
@@ -320,7 +355,3 @@ class Calendario:
         label = event.widget
         if label != self.selected_label.get("label") and label["background"] == "#c3c3c3":
             label.config(background="#eeeeee")
-
-root = Tk()
-MainCal = Calendario(root)
-root.mainloop()
