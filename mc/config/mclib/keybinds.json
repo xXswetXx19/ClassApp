@@ -1,0 +1,371 @@
+{
+    "minecraft": {
+        "": {}
+    },
+    "mcp": {
+        "": {}
+    },
+    "FML": {
+        "": {}
+    },
+    "forge": {
+        "": {}
+    },
+    "creativecoredummy": {
+        "": {}
+    },
+    "micdoodlecore": {
+        "": {}
+    },
+    "openmodscore": {
+        "": {}
+    },
+    "foamfixcore": {
+        "": {}
+    },
+    "randompatches": {
+        "": {}
+    },
+    "crafttweaker": {
+        "": {}
+    },
+    "mtlib": {
+        "": {}
+    },
+    "modtweaker": {
+        "": {}
+    },
+    "jei": {
+        "": {}
+    },
+    "abyssalcraft": {
+        "": {}
+    },
+    "ctm": {
+        "": {}
+    },
+    "appliedenergistics2": {
+        "": {}
+    },
+    "baubles": {
+        "": {}
+    },
+    "endercore": {
+        "": {}
+    },
+    "tombstone": {
+        "": {}
+    },
+    "enderio": {
+        "": {}
+    },
+    "mantle": {
+        "": {}
+    },
+    "redstoneflux": {
+        "": {}
+    },
+    "chisel": {
+        "": {}
+    },
+    "enderiointegrationtic": {
+        "": {}
+    },
+    "tconstruct": {
+        "": {}
+    },
+    "p455w0rdslib": {
+        "": {}
+    },
+    "ae2wtlib": {
+        "": {}
+    },
+    "architecturecraft": {
+        "": {}
+    },
+    "galacticraftcore": {
+        "": {}
+    },
+    "armourers_workshop": {
+        "": {}
+    },
+    "botania": {
+        "": {}
+    },
+    "llibrary": {
+        "": {}
+    },
+    "mowziesmobs": {
+        "": {}
+    },
+    "patchouli": {
+        "": {}
+    },
+    "betteranimalsplus": {
+        "": {}
+    },
+    "bewitchment": {
+        "": {}
+    },
+    "guideapi": {
+        "": {}
+    },
+    "bloodmagic": {
+        "": {}
+    },
+    "bookshelf": {
+        "": {}
+    },
+    "christmasfestivity": {
+        "": {}
+    },
+    "codechickenlib": {
+        "": {}
+    },
+    "cofhcore": {
+        "": {}
+    },
+    "cofhworld": {
+        "": {}
+    },
+    "conarm": {
+        "": {}
+    },
+    "ctgui": {
+        "": {}
+    },
+    "crafttweakerjei": {
+        "": {}
+    },
+    "creativecore": {
+        "": {}
+    },
+    "custommainmenu": {
+        "": {}
+    },
+    "customnpcs": {
+        "": {}
+    },
+    "cyclopscore": {
+        "": {}
+    },
+    "doggytalents": {
+        "": {}
+    },
+    "mclib": {
+        "": {}
+    },
+    "emoticons": {
+        "": {}
+    },
+    "enderiobase": {
+        "": {}
+    },
+    "enderioconduits": {
+        "": {}
+    },
+    "enderioconduitsappliedenergistics": {
+        "": {}
+    },
+    "enderioconduitsopencomputers": {
+        "": {}
+    },
+    "enderioconduitsrefinedstorage": {
+        "": {}
+    },
+    "enderiointegrationforestry": {
+        "": {}
+    },
+    "enderiointegrationticlate": {
+        "": {}
+    },
+    "ftblib": {
+        "": {}
+    },
+    "enderiomachines": {
+        "": {}
+    },
+    "enderiopowertools": {
+        "": {}
+    },
+    "enderstorage": {
+        "": {}
+    },
+    "renderlib": {
+        "": {}
+    },
+    "entityculling": {
+        "": {}
+    },
+    "evilcraft": {
+        "": {}
+    },
+    "evilcraftcompat": {
+        "": {}
+    },
+    "extrautils2": {
+        "": {}
+    },
+    "zerocore": {
+        "": {}
+    },
+    "bigreactors": {
+        "": {}
+    },
+    "fairylights": {
+        "": {}
+    },
+    "floocraftft": {
+        "": {}
+    },
+    "fluxnetworks": {
+        "": {}
+    },
+    "foamfix": {
+        "": {}
+    },
+    "foamflower": {
+        "": {}
+    },
+    "forgelin": {
+        "": {}
+    },
+    "ftbutilities": {
+        "": {}
+    },
+    "itemfilters": {
+        "": {}
+    },
+    "ftbquests": {
+        "": {}
+    },
+    "galacticraftplanets": {
+        "": {}
+    },
+    "gottschcore": {
+        "": {}
+    },
+    "ichunutil": {
+        "": {}
+    },
+    "hats": {
+        "": {}
+    },
+    "heavynight": {
+        "": {}
+    },
+    "heavynightsounds": {
+        "": {}
+    },
+    "waila": {
+        "": {}
+    },
+    "mts": {
+        "": {}
+    },
+    "ironchest": {
+        "": {}
+    },
+    "ivv": {
+        "": {}
+    },
+    "journeymap": {
+        "": {}
+    },
+    "libraryex": {
+        "": {}
+    },
+    "malisiscore": {
+        "": {}
+    },
+    "malisisdoors": {
+        "": {}
+    },
+    "mobdismemberment": {
+        "": {}
+    },
+    "modularvc": {
+        "": {}
+    },
+    "netherex": {
+        "": {}
+    },
+    "netherportalfix": {
+        "": {}
+    },
+    "openmods": {
+        "": {}
+    },
+    "openblocks": {
+        "": {}
+    },
+    "oreregen": {
+        "": {}
+    },
+    "placebo": {
+        "": {}
+    },
+    "playerrevive": {
+        "": {}
+    },
+    "reap": {
+        "": {}
+    },
+    "ruins": {
+        "": {}
+    },
+    "rustic": {
+        "": {}
+    },
+    "silentlib": {
+        "": {}
+    },
+    "scalinghealth": {
+        "": {}
+    },
+    "simple_trophies": {
+        "": {}
+    },
+    "stygian": {
+        "": {}
+    },
+    "swampland": {
+        "": {}
+    },
+    "tcomplement": {
+        "": {}
+    },
+    "tinkertoolleveling": {
+        "": {}
+    },
+    "torchslabmod": {
+        "": {}
+    },
+    "trashslot": {
+        "": {}
+    },
+    "travelersbackpack": {
+        "": {}
+    },
+    "variedcommodities": {
+        "": {}
+    },
+    "vc": {
+        "": {}
+    },
+    "vending": {
+        "": {}
+    },
+    "wct": {
+        "": {}
+    },
+    "xlfoodmod": {
+        "": {}
+    },
+    "recipehandler": {
+        "": {}
+    },
+    "": {
+        "": {}
+    }
+}
