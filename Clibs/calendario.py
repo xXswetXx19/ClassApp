@@ -2,55 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 import calendar
 from datetime import date
-import sqlite3
-
-def create_db():
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS Notas (
-                id INTEGER PRIMARY KEY,
-                dia INTEGER,
-                mes INTEGER,
-                año INTEGER,
-                descripcion TEXT,
-                prioridad TEXT
-                )""")
-    conn.commit()
-    conn.close()
-def run_query(query, parameters=()):
-    with sqlite3.connect('database.db') as conn:
-        cursor = conn.cursor()
-        result = cursor.execute(query, parameters)
-        conn.commit()
-    return result
-
-def insert_db(dia, mes, año, descripcion, prioridad):
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO Notas VALUES (NULL, ?, ?, ?, ?, ?)", (dia, mes, año, descripcion, prioridad))
-    conn.commit()
-    conn.close()
-
-def delete_Nota(id):
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM Notas WHERE id = ?", (id,))
-    conn.commit()
-    conn.close()
-
-def search_DayData(**kwargs):
-    Id = kwargs.get('Id', None)
-    if Id:
-        rows = run_query("SELECT * FROM Notas WHERE id = ?", (Id,)).fetchone()
-        return rows if len(rows) != 0 else None
-    else:
-        dia = kwargs.get('dia', None)
-        mes = kwargs.get('mes', None)
-        año = kwargs.get('año', None)
-        rows = run_query("SELECT * FROM Notas WHERE dia = ? AND mes = ? AND año = ?", (dia, mes, año)).fetchall()
-        return rows if len(rows) != 0 else None
-
-create_db()
+from Core.Database import insert_db, search_DayData, delete_Nota
 
 class Dia(Label):
     def __init__(self, *args, **kwargs):
@@ -59,9 +11,8 @@ class Dia(Label):
         self.Dia = date.day
         self.Mes = date.month
         self.Año = date.year
-        
         self.__Notas = []
-        self.updateDayData()
+        # self.updateDayData()
         
     def addNota(self, descripcion):
         self.__Notas.append(descripcion)
@@ -91,10 +42,10 @@ class Ventanita:
         self.win = win
         self.Diaclass = widgetday
         self.calendario = calendario
-        color1 = "#eeeeee"
-        self.TopFrame = Frame(win, bg=color1)
+
+        self.TopFrame = Frame(win, bg="#eeeeee")
         self.ButtonsFrame = Frame(win)
-        self.HomeworksFrame = Frame(self.TopFrame, bg=color1, bd=4, relief="ridge", width=400, height=150)
+        self.HomeworksFrame = Frame(self.TopFrame, bg="#eeeeee", bd=4, relief="ridge", width=400, height=150)
     
         self.TopFrame.pack(expand= True, fill=BOTH, side=TOP)
         self.HomeworksFrame.grid(row=1, column=0, sticky=NSEW)
@@ -104,7 +55,7 @@ class Ventanita:
         self.TopFrame.grid_columnconfigure(0, minsize=400)
 
         Toptext = f"Tareas del {self.Diaclass.getday()}/{self.Diaclass.getmonth()}/{self.Diaclass.getyear()}"
-        Daynum = Label(self.TopFrame, text= Toptext, font=("Arial", 11, "bold"), background=color1)
+        Daynum = Label(self.TopFrame, text= Toptext, font=("Arial", 11, "bold"), background="#eeeeee")
         Daynum.grid(row=0, column=0, sticky= NSEW)
         
         self.view_tree = ttk.Treeview(self.HomeworksFrame, height= 6,columns = ["#0", "#1"])
@@ -123,8 +74,8 @@ class Ventanita:
         self.view_tree.tag_configure("Alta", background=calendario.Colores.get("Alta"))
         self.view_tree.tag_configure("Urgente", background=calendario.Colores.get("Urgente"))
  
-        Button(self.ButtonsFrame, text="Añadir Pendiente", font=("Arial", 11, "bold"), background=color1, command=self.addNota, width=20).pack(side=LEFT)
-        Button(self.ButtonsFrame, text="Eliminar Pendiente", font=("Arial", 11, "bold"), background=color1, command=self.deleteNota, width=25).pack(side=RIGHT)
+        Button(self.ButtonsFrame, text="Añadir Pendiente", font=("Arial", 11, "bold"), background="#eeeeee", command=self.addNota, width=20).pack(side=LEFT)
+        Button(self.ButtonsFrame, text="Eliminar Pendiente", font=("Arial", 11, "bold"), background="#eeeeee", command=self.deleteNota, width=25).pack(side=RIGHT)
         self.fill_tree()
     def clear_tree(self):
         self.view_tree.delete(*self.view_tree.get_children())
@@ -150,7 +101,7 @@ class Ventanita:
         self.Add_win.resizable(width=False, height=False)
         self.Add_win.title = 'Agregar Nota'
         self.Add_win.geometry('300x200')
-        self.Add_win.iconbitmap("Icono.ico")
+        # self.Add_win.iconbitmap("Icono.ico")
         def agg(Descripcion, Prioridad):
             if Descripcion == "":  
                 return messagebox.showerror("Error", "No has ingresado una descripción")
@@ -206,7 +157,7 @@ class Calendario:
         
         # Mehh 
         self.Colores = {
-            "Baja": "#99e5b1", # M
+            "Baja": "#99e5b1",
             "Media": "#d4b98d",
             "Alta": "#c78989",
             "Urgente": "#d32f2f"
@@ -227,41 +178,6 @@ class Calendario:
             "December": "Diciembre"
         }
 
-        # Terracota
-        # self.Colores = {
-        #     "Baja": "#88d8b0",
-        #     "Media": "#c9b57d",
-        #     "Alta": "#b78787",
-        #     "Urgente": "#c62828"
-        # }
-        # Puede ser
-        # self.Colores = {
-        #     "Baja": "#77bf9f",
-        #     "Media": "#b8a27c",
-        #     "Alta": "#a67676",
-        #     "Urgente": "#b71b1c"
-        # }
-        # self.Colores = {
-        #     "Baja": "#66a68f",
-        #     "Media": "#a79773",
-        #     "Alta": "#966362",
-        #     "Urgente": "#a30000"
-        # }
-        # Fuertes
-        # self.Colores = {
-        #     "Baja": "#00b200",
-        #     "Media": "#e6a800",
-        #     "Alta": "#cc3333",
-        #     "Urgente": "#ff0000"
-        # }
-        # Fuertes y claros
-        # self.Colores = {
-        #     "Baja": "#33cc33",
-        #     "Media": "#ffff00",
-        #     "Alta": "#ff9933",
-        #     "Urgente": "#ff3333"
-        # }
-        
         # Top Frame
         self.butt1 = Label(self.TopFrame, text = "<",width= 5, height=3, font=(10), background= "#006064", foreground= "white")
         self.butt1.pack(side = LEFT, anchor=CENTER)
@@ -295,6 +211,7 @@ class Calendario:
                 if date.month == month: 
                     label = Dia(self.BotFrame, text=date.day, bg="#eeeeee", font="Arial 11", width=10, height=2, border=8, date=date)
                     label.grid(row=i, column=j)
+                    label.updateDayData()
                     label_cant += 1
                     if len(label.getDescripcion()) > 0:
                         prioridad = label.getDescripcion()[0][1]

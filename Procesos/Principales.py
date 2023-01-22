@@ -2,7 +2,6 @@ from Core.Database import run_query
 import os
 
 def getPath():
-    global Path
     Path = run_query("SELECT Ruta FROM Configuracion").fetchone()
     Path = Path[0] if Path else os.getcwd()
     return Path
@@ -14,7 +13,8 @@ def getMaterias():
     return Materias
 
 
-def CreateDirs(self):
+def CreateDirs():
+    Path = getPath()
     Materias = getMaterias()
     if not os.path.exists(f"{Path}\Tareas"):
         os.mkdir(f"{Path}\Tareas")
@@ -25,7 +25,3 @@ def CreateDirs(self):
 
 
 
-# ! intentar reemplazar
-def updateList(self):
-    self.Materias = getMaterias()
-    self.entry["completevalues"] = self.Materias

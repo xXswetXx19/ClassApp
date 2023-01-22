@@ -2,29 +2,27 @@ from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.ttk import Combobox
 from Clibs import Autocomplete as ac
-import sqlite3 as sql
-from docxtpl import DocxTemplate
-from datetime import datetime as date
-import os
-import subprocess
-import calendario as cal
+import Clibs.calendario as cal
 from Core.Database import *
-from Database import *
+from Procesos.General import *
+from Procesos.Principales import getPath, getMaterias
 
 class Core:
-    def start(self, win):
+    def __init__(self):
+        self.master = Tk()
+
+
+    def start(self):
         self.startDatabase()
-        self.FillTw()
-        self.getPath()
-        self.__updateList()
-        return APP(win)
-        
+        self.App = APP(self.master)
+        self.master.mainloop()
 
     def startDatabase(self):
         createDB()
         createTableMaterias()
         createTableConfig()
         createTableCantidad()
+        createTableNotas()
     
     # ! Intentar reemplazar
     def opencal(self):
@@ -56,7 +54,8 @@ class APP:
         self.master.title("Gestor de tareas")
         self.master.geometry("521x248")
         self.master.resizable(0,0)
-        self.master.iconbitmap("Icono.ico")
+        # self.master.iconbitmap("Icono.ico")
+
         # Event binds
         self.master.bind('<KeyPress>', self.__update)
         self.master.bind("<FocusIn>", self.__update)
@@ -82,22 +81,21 @@ class APP:
         self.tree.tag_configure('Materias', font=("", 10), foreground = 'Black')
         # Creating Buttons and placing them with the Dic data
         ButtonsData = {
-            "Crear Tarea": self.CreateTarea,
-            "Ver Tareas": self.VerTareas,
-            "Calendario": self.opencal,
-            "Ver Pendientes": self.Pendientes,
-            "Configuracion": self.configuration,
-            "Agregar Materia": self.addMateria,
-            "Eliminar Materia": self.removeMateria,
+            "Crear Tarea": lambda: CreateTarea(self),
+            "Ver Tareas": lambda: HomeworksWindow(Toplevel(self.master)),
+            "Calendario": lambda: cal.Calendario(Toplevel(self.master)),
+            # "Ver Pendientes": Pendientes,
+            "Configuracion":  lambda:ConfigWin(Toplevel(self.master)),
+            "Agregar Materia": lambda: addMateria(self),
+            "Eliminar Materia": lambda: removeMateria(self),
             "Salir": self.master.destroy
         }
         # Creating Buttons
         for i in range(len(ButtonsData.keys())):
             Button(self.frame, text = list(ButtonsData.keys())[i], command = list(ButtonsData.values())[i], width=30).pack(fill=BOTH, expand=True)
         # Startup Functions
-        self.FillTw()
-        getPath()
-        self.__updateList()
+        FillTw(self)
+        updateList(self)
     
     
     def __update(self, event):
@@ -111,7 +109,7 @@ class APP:
         if event.char.isalnum() and query == "":
             query += event.char
         if query != "":
-            self.FillTw()
+            FillTw(self)
             for child in self.tree.get_children():
                 if self.tree.item(child)['values']:
                     if str(query.lower()) in self.tree.item(child)['values'][0].lower():
@@ -120,7 +118,7 @@ class APP:
                 if child not in selections:
                     self.tree.detach(child)
         else:
-            self.FillTw()
+            FillTw(self)
         if len(selections) == 1:
             self.tree.selection_set(selections)
 
@@ -132,8 +130,8 @@ class ConfigWin:
         self.Config_win.resizable(width=False, height=False)
         self.Config_win.title = 'Configuración'
         self.Config_win.geometry('500x150')
-        self.Config_win.iconbitmap("Icono.ico")
-         
+        # self.Config_win.iconbitmap("Icono.ico")
+        Path = getPath()
         self.ConfigData = run_query('SELECT * FROM Configuracion').fetchone()
         Datos = ["Nombres:", "Apellidos:", "Paralelo:", "Ruta:"]
         
@@ -147,7 +145,7 @@ class ConfigWin:
         self.Entries = [i for i in self.Config_win.children.values() if type(i) == Entry]
         self.RutaEntry = self.Entries[3]
         self.RutaEntry.config(state = DISABLED)
-        getPath()
+        # getPath()
         self.RutaEntry['textvariable'] = StringVar(self.Config_win, value = Path)
         self.RutaEntry.bind("<Button-1>", lambda x: self.browsedir())
         
@@ -168,7 +166,7 @@ class ConfigWin:
             query = f'INSERT INTO Configuracion VALUES(NULL, ?, ?, ?, ?)'
             run_query(query, (Nombres, Apellidos, Paralelo, Ruta))
             self.Config_win.destroy()
-        getPath()
+        # getPath()
     def browsedir(self):
         Dirname = filedialog.askdirectory()
         if Dirname:
@@ -181,7 +179,7 @@ class HomeworksWindow:
         self.view_wins.geometry("650x275")
         self.view_wins.resizable(0,0)
         self.view_wins.config(bg = "")
-        self.view_wins.iconbitmap("Icono.ico")
+        # self.view_wins.iconbitmap("Icono.ico")
         self.Materias = getMaterias()
         
         self.view_frame = Frame(self.view_wins, bg = "#E4DFEC")
@@ -226,18 +224,14 @@ class HomeworksWindow:
         self.view_buttons_frame.columnconfigure(1, minsize=216)
         self.view_buttons_frame.columnconfigure(2, minsize=216)
 
-        ButtonsData = { "Eliminar": self.DeleteHomework, "Ubicacion": self.OpenPath, "Abrir": self.OpenHomework }
+        ButtonsData = { "Eliminar": lambda: DeleteHomework(self), "Ubicacion": lambda: OpenPath(self), "Abrir": lambda: OpenHomework(self) }
         for i in range(len(ButtonsData.keys())):
             Button(self.view_buttons_frame, text = list(ButtonsData.keys())[i], command= list(ButtonsData.values())[i], width=10, height=1).grid(row = 0, column = i, sticky = W + E)
 
         self.view_tree.tag_configure('Tareas', font=("", 10), foreground = 'Black')
         # Startup functions
-        getPath()
-        self.getHomeworks()  
-    def clearviewTw(self):
-        records = self.view_tree.get_children()
-        for element in records:
-            self.view_tree.delete(element)
+        # getPath()
+        getHomeworks(self)
 
     def filterupdate(self, event, entry, index):
         selections = []
@@ -250,7 +244,7 @@ class HomeworksWindow:
         if event.char.isalnum() and len(query) == 0:
             query += event.char
         if query != "":
-            self.getHomeworks()
+            getHomeworks(self)
             for child in self.view_tree.get_children():
                 if self.view_tree.item(child)['values']:
                     if query.lower() in str(self.view_tree.item(child)['values'][index]).lower():
@@ -259,7 +253,7 @@ class HomeworksWindow:
                 if child not in selections:
                     self.view_tree.detach(child)
         else:
-            self.getHomeworks()
+            getHomeworks(self)
 
 class VerPendientes:
     def __init__(self):
