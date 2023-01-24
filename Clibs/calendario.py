@@ -12,7 +12,6 @@ class Dia(Label):
         self.Mes = date.month
         self.Año = date.year
         self.__Notas = []
-        # self.updateDayData()
         
     def addNota(self, descripcion):
         self.__Notas.append(descripcion)
@@ -33,18 +32,18 @@ class Dia(Label):
                 Id, dia, mes, año, descripcion, prioridad = Data
                 self.__Notas.append([Id, prioridad, descripcion])
 
-class Ventanita:
-    def __init__(self, calendario, widgetday):
-        win = Toplevel()
-        win.title("Tareas")
-        win.geometry("400x200")
-        win.resizable(0,0)
-        self.win = win
-        self.Diaclass = widgetday
-        self.calendario = calendario
+class NotasWin:
+    def __init__(self, Toplevel, CalendaryInstance, WidgetDay):
+        self.win = Toplevel
+        self.win.title("Tareas")
+        self.win.geometry("400x200")
+        self.win.resizable(0,0)
+        self.win.iconbitmap("Archivos\Icono.ico")
+        self.Diaclass = WidgetDay
+        self.calendario = CalendaryInstance
 
-        self.TopFrame = Frame(win, bg="#eeeeee")
-        self.ButtonsFrame = Frame(win)
+        self.TopFrame = Frame(self.win, bg="#eeeeee")
+        self.ButtonsFrame = Frame(self.win)
         self.HomeworksFrame = Frame(self.TopFrame, bg="#eeeeee", bd=4, relief="ridge", width=400, height=150)
     
         self.TopFrame.pack(expand= True, fill=BOTH, side=TOP)
@@ -69,10 +68,10 @@ class Ventanita:
         self.view_tree.column("#2", width = 70, anchor="center")
         
         # Creando los tags
-        self.view_tree.tag_configure("Baja", background=calendario.Colores.get("Baja"))
-        self.view_tree.tag_configure("Media", background=calendario.Colores.get("Media"))
-        self.view_tree.tag_configure("Alta", background=calendario.Colores.get("Alta"))
-        self.view_tree.tag_configure("Urgente", background=calendario.Colores.get("Urgente"))
+        self.view_tree.tag_configure("Baja", background=CalendaryInstance.Colores.get("Baja"))
+        self.view_tree.tag_configure("Media", background=CalendaryInstance.Colores.get("Media"))
+        self.view_tree.tag_configure("Alta", background=CalendaryInstance.Colores.get("Alta"))
+        self.view_tree.tag_configure("Urgente", background=CalendaryInstance.Colores.get("Urgente"))
  
         Button(self.ButtonsFrame, text="Añadir Pendiente", font=("Arial", 11, "bold"), background="#eeeeee", command=self.addNota, width=20).pack(side=LEFT)
         Button(self.ButtonsFrame, text="Eliminar Pendiente", font=("Arial", 11, "bold"), background="#eeeeee", command=self.deleteNota, width=25).pack(side=RIGHT)
@@ -147,6 +146,7 @@ class Calendario:
         self.window.geometry("755x375")
         self.window.title("Calendario")
         self.window.resizable(0,0)
+        self.window.iconbitmap("Archivos\Icono.ico")
         self.TopFrame = Frame(self.window,background="#006064", height=50)
         self.CenterFrame = Frame(self.window, background="black", height=30)
         self.BotFrame = Frame(self.window, height=205)
@@ -155,7 +155,6 @@ class Calendario:
         self.CenterFrame.pack(fill = BOTH, side=TOP)
         self.BotFrame.pack(fill=BOTH, side=TOP)
         
-        # Mehh 
         self.Colores = {
             "Baja": "#99e5b1",
             "Media": "#d4b98d",
@@ -262,8 +261,14 @@ class Calendario:
         self.mes_actual = month
         
     def on_click(self, event):
+        if any(isinstance(x, Toplevel) for x in self.window.winfo_children()):
+            if (self.window.winfo_exists() if self.window.winfo_exists() else False):
+                messagebox.showerror("Error", "Ya hay una ventana de notas abierta")
+                return self.window.lift() 
+        self.CalNotes = Toplevel(self.window)
         label = event.widget
-        Ventanita(self, label)
+        NotasWin(Toplevel = self.CalNotes ,CalendaryInstance = self, WidgetDay = label)
+
     def onover(self, event):
         label = event.widget
         if label["background"] == "#eeeeee":

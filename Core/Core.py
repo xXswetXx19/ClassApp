@@ -11,7 +11,6 @@ class Core:
     def __init__(self):
         self.master = Tk()
 
-
     def start(self):
         self.startDatabase()
         self.App = APP(self.master)
@@ -23,29 +22,6 @@ class Core:
         createTableConfig()
         createTableCantidad()
         createTableNotas()
-    
-    # ! Intentar reemplazar
-    def opencal(self):
-            calwin = Toplevel(self.master)
-            cal.Calendario(calwin)
-
-
-    def VerTareas(self):
-        if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
-            if self.view_wins.winfo_exists() if self.view_wins.winfo_exists() else False:
-                messagebox.showerror("Error", "Ya hay un visualizador de tareas abierto")
-                return self.view_wins.lift() 
-        self.view_wins = Toplevel(self.master)
-        self.view_win_functions = HomeworksWindow(self.view_wins)
-    
-    def configuration(self):
-        if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
-            if (self.config_win.winfo_exists() if self.config_win.winfo_exists() else False):
-                messagebox.showerror("Error", "Ya hay una ventana de configuracion abierta")
-                return self.config_win.lift() 
-        self.config_win = Toplevel(self.master)
-        ConfigWin(self.config_win)
-
 
 class APP:
     def __init__(self, master):
@@ -54,7 +30,7 @@ class APP:
         self.master.title("Gestor de tareas")
         self.master.geometry("521x248")
         self.master.resizable(0,0)
-        # self.master.iconbitmap("Icono.ico")
+        self.master.iconbitmap("Archivos/Icono.ico")
 
         # Event binds
         self.master.bind('<KeyPress>', self.__update)
@@ -66,7 +42,7 @@ class APP:
         self.TWframe.pack(expand = True, fill = BOTH, side=LEFT)
         self.frame.pack(expand=True, fill=BOTH, side=LEFT)
         # Creating Search Bar and placing it
-        # ! Agregar lista de materias
+
         self.entry = ac.AutocompleteCombobox(self.TWframe, width=25,completevalues = lambda: [])
         self.entry.grid(row = 0, column = 0,sticky = W + E)
         
@@ -82,10 +58,10 @@ class APP:
         # Creating Buttons and placing them with the Dic data
         ButtonsData = {
             "Crear Tarea": lambda: CreateTarea(self),
-            "Ver Tareas": lambda: HomeworksWindow(Toplevel(self.master)),
-            "Calendario": lambda: cal.Calendario(Toplevel(self.master)),
+            "Ver Tareas": lambda: self.VerTareas(),
+            "Calendario": lambda: self.Calendario(),
             # "Ver Pendientes": Pendientes,
-            "Configuracion":  lambda:ConfigWin(Toplevel(self.master)),
+            "Configuracion":  lambda: self.configuration(),
             "Agregar Materia": lambda: addMateria(self),
             "Eliminar Materia": lambda: removeMateria(self),
             "Salir": self.master.destroy
@@ -121,6 +97,30 @@ class APP:
             FillTw(self)
         if len(selections) == 1:
             self.tree.selection_set(selections)
+            
+    def VerTareas(self):
+        if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
+            if self.view_wins.winfo_exists() if self.view_wins.winfo_exists() else False:
+                messagebox.showerror("Error", "Ya hay un visualizador de tareas abierto")
+                return self.view_wins.lift() 
+        self.view_wins = Toplevel(self.master)
+        self.view_win_functions = HomeworksWindow(self.view_wins)
+    
+    def configuration(self):
+        if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
+            if (self.config_win.winfo_exists() if self.config_win.winfo_exists() else False):
+                messagebox.showerror("Error", "Ya hay una ventana de configuracion abierta")
+                return self.config_win.lift() 
+        self.config_win = Toplevel(self.master)
+        ConfigWin(self.config_win)
+        
+    def Calendario(self):
+        if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
+            if self.calendario.winfo_exists() if self.calendario.winfo_exists() else False:
+                messagebox.showerror("Error", "Ya hay una ventana de calendario abierta")
+                return self.calendario.lift() 
+        self.calendario = Toplevel(self.master)
+        cal.Calendario(self.calendario)
 
 
 
@@ -130,7 +130,8 @@ class ConfigWin:
         self.Config_win.resizable(width=False, height=False)
         self.Config_win.title = 'Configuración'
         self.Config_win.geometry('500x150')
-        # self.Config_win.iconbitmap("Icono.ico")
+        self.Config_win.iconbitmap("Archivos/Icono.ico")
+
         Path = getPath()
         self.ConfigData = run_query('SELECT * FROM Configuracion').fetchone()
         Datos = ["Nombres:", "Apellidos:", "Paralelo:", "Ruta:"]
@@ -176,10 +177,9 @@ class HomeworksWindow:
     def __init__(self, toplevel):
         self.view_wins = toplevel
         self.view_wins.title("Tareas")
-        self.view_wins.geometry("650x275")
+        self.view_wins.geometry("800x275")
         self.view_wins.resizable(0,0)
-        self.view_wins.config(bg = "")
-        # self.view_wins.iconbitmap("Icono.ico")
+        self.view_wins.iconbitmap("Archivos/Icono.ico")
         self.Materias = getMaterias()
         
         self.view_frame = Frame(self.view_wins, bg = "#E4DFEC")
@@ -195,7 +195,9 @@ class HomeworksWindow:
         self.view_topframes.columnconfigure(1, minsize=150)
         self.view_topframes.columnconfigure(2, minsize=150)
         self.view_topframes.columnconfigure(3, minsize=150)
-        for i in range(3):
+        self.view_topframes.columnconfigure(4, minsize=150)
+        
+        for i in range(4):
             Entry(self.view_topframes, width=10, font=('', 12)).grid(row = 0, column = i + 1,sticky = W + E)
         # Getting the entries from a frame and giving events to them
         self.entries = [i for i in self.view_topframes.children.values() if type(i) == Entry or type(i) == Combobox]
@@ -204,33 +206,41 @@ class HomeworksWindow:
             entrie.bind("<FocusIn>", lambda event, entry = entrie, index = index: self.filterupdate(event, entry, index))
         
         # Creating Treeview
-        self.view_tree = ttk.Treeview(self.view_frame, height= 10,columns = ("#1", "#2", "#3", "#4"))
+        self.view_tree = ttk.Treeview(self.view_frame, height= 10,columns = ("#1", "#2", "#3", "#4", "#5"))
         self.view_tree.grid(row = 1, column = 0)
+        
         self.view_tree.heading('#0', text = 'ID', anchor = CENTER)
-        self.view_tree.column("#0",minwidth=0,width=0, stretch=NO, anchor= CENTER)
         self.view_tree.heading("#1", text = 'Materia', anchor = CENTER)
+        self.view_tree.heading("#2", text = 'Documento', anchor = CENTER)       
+        self.view_tree.heading("#3", text = 'Num', anchor = CENTER)
+        self.view_tree.heading("#4", text = 'Fecha', anchor = CENTER)
+        self.view_tree.heading("#5", text = 'Hora', anchor = CENTER)
+        
+        self.view_tree.column("#0",minwidth=0,width=0, stretch=NO, anchor= CENTER)
         self.view_tree.column("#1",minwidth=100,width=200, anchor= W)
-        self.view_tree.heading("#2", text = 'Num', anchor = CENTER)
         self.view_tree.column("#2",minwidth=100,width=150, anchor= CENTER)
-        self.view_tree.heading("#3", text = 'Fecha', anchor = CENTER)
         self.view_tree.column("#3",minwidth=100,width=150, anchor= CENTER)
-        self.view_tree.heading("#4", text = 'Hora', anchor = CENTER)
         self.view_tree.column("#4",minwidth=100,width=150, anchor= CENTER)
+        self.view_tree.column("#5",minwidth=100,width=150, anchor= CENTER)
 
         self.view_buttons_frame = Frame(self.view_frame, bg = "BLUE")
         self.view_buttons_frame.grid(row= 2, column = 0, columnspan=3)
         
-        self.view_buttons_frame.columnconfigure(0, minsize=216)
-        self.view_buttons_frame.columnconfigure(1, minsize=216)
-        self.view_buttons_frame.columnconfigure(2, minsize=216)
+        self.view_buttons_frame.columnconfigure(0, minsize=200)
+        self.view_buttons_frame.columnconfigure(1, minsize=200)
+        self.view_buttons_frame.columnconfigure(2, minsize=200)
+        self.view_buttons_frame.columnconfigure(3, minsize=200)
 
-        ButtonsData = { "Eliminar": lambda: DeleteHomework(self), "Ubicacion": lambda: OpenPath(self), "Abrir": lambda: OpenHomework(self) }
+        ButtonsData = { 
+            "Eliminar": lambda: DeleteHomework(self), 
+            "Ubicacion": lambda: OpenPath(self), 
+            "Abrir": lambda: OpenHomework(self),
+            "PDF": lambda: DoctoPdf(self)}
+        
         for i in range(len(ButtonsData.keys())):
             Button(self.view_buttons_frame, text = list(ButtonsData.keys())[i], command= list(ButtonsData.values())[i], width=10, height=1).grid(row = 0, column = i, sticky = W + E)
 
         self.view_tree.tag_configure('Tareas', font=("", 10), foreground = 'Black')
-        # Startup functions
-        # getPath()
         getHomeworks(self)
 
     def filterupdate(self, event, entry, index):
@@ -255,19 +265,19 @@ class HomeworksWindow:
         else:
             getHomeworks(self)
 
-class VerPendientes:
-    def __init__(self):
-        self.win = Toplevel()
-        self.win.title("Tareas")
-        self.win.geometry("300x400")
-        # self.win.resizable(0,0)
-        color1 = "#eeeeee"
-        self.HomeworksFrame = Frame(self.win, bg=color1, bd=4, relief="ridge", width=300, height=400)
-        self.HomeworksFrame.grid(row=1, column=0, sticky=NSEW)
-        self.listcolors = ["#ffffff", "#eeeeee", "#dddddd", "#cccccc", "#bbbbbb", "#aaaaaa", "#999999", "#888888", "#777777", "#666666", "#555555", "#444444", "#333333", "#222222", "#111111", "#000000"]
-        self.FillPending()
-    def FillPending(self):
-        for i, color in enumerate(self.listcolors):
-            Label(self.HomeworksFrame, text = "Hola", bg = color).grid(row = i, column = 0)
+# class VerPendientes:
+#     def __init__(self):
+#         self.win = Toplevel()
+#         self.win.title("Tareas")
+#         self.win.geometry("300x400")
+#         self.win.resizable(0,0)
+#         color1 = "#eeeeee"
+#         self.HomeworksFrame = Frame(self.win, bg=color1, bd=4, relief="ridge", width=300, height=400)
+#         self.HomeworksFrame.grid(row=1, column=0, sticky=NSEW)
+#         self.listcolors = ["#ffffff", "#eeeeee", "#dddddd", "#cccccc", "#bbbbbb", "#aaaaaa", "#999999", "#888888", "#777777", "#666666", "#555555", "#444444", "#333333", "#222222", "#111111", "#000000"]
+#         self.FillPending()
+#     def FillPending(self):
+#         for i, color in enumerate(self.listcolors):
+#             Label(self.HomeworksFrame, text = "Hola", bg = color).grid(row = i, column = 0)
 
         

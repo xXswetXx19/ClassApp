@@ -1,5 +1,5 @@
 import sqlite3 as sql
-db_name = "Asistencia.db"
+db_name = "Registro.db"
 
 def createDB():
     conn = sql.connect(db_name)
@@ -15,27 +15,23 @@ def run_query(query, parametros = ()):
 
 def createTableMaterias():
     run_query("""CREATE TABLE IF NOT EXISTS Materias (
-        Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+        Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         Materia text)""")
 
 def createTableCantidad():
-    run_query(f"""CREATE TABLE IF NOT EXISTS Cantidad (
+    run_query("""CREATE TABLE IF NOT EXISTS Cantidad (
         Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         Fecha text, 
         cantidad text)""")
 
 def createTableConfig():
-    conn = sql.connect(db_name)
-    cursor = conn.cursor()
-    cursor.execute(f"""
+    run_query("""
         CREATE TABLE IF NOT EXISTS Configuracion (
             Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             Nombres text, 
             Apellidos text,
             Paralelo text,
             Ruta text)""")
-    conn.commit()
-    conn.close()
 
 def createTableNotas():
     run_query("""

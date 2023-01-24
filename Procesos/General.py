@@ -1,4 +1,3 @@
-
 import os
 from Core.Database import run_query
 from Procesos.Principales import getPath
@@ -9,7 +8,7 @@ from datetime import date, datetime
 from docxtpl import DocxTemplate
 import subprocess
 from Procesos.Principales import getPath, getMaterias, CreateDirs
-
+import docx2pdf
 Plantilla_Path = os.path.join("Archivos", "plantilla.docx")
 
 
@@ -124,10 +123,13 @@ def getHomeworks(self):
                 Homeworks = os.scandir(f"{Path}\Tareas\{ClassDir}")
                 for Homework in Homeworks:
                     timestamp = os.path.getctime(Homework.path)
-                    Date = date.fromtimestamp(timestamp).strftime('%d/%m/%Y')
-                    Hour = date.fromtimestamp(timestamp).strftime('%H:%M')
+                    Date = datetime.fromtimestamp(timestamp).strftime('%d/%m/%Y')
+                    Hour = datetime.fromtimestamp(timestamp).strftime('%H:%M')
                     Num = Homework.name.split("-")[2].split(".")[0]
-                    self.view_tree.insert('', 0, text = Homework, values = (ClassDir, Num, Date, Hour), tags = ("Tareas"))
+                    Doctype = Homework.name.split("-")[2].split(".")[1].capitalize()
+                    if Doctype == "Docx":
+                        Doctype = "Word"
+                    self.view_tree.insert('', 0, text = Homework, values = (ClassDir, Doctype, Num, Date, Hour), tags = ("Tareas"))
 def DeleteHomework(self):
     Path = getPath()
     try:
@@ -158,3 +160,17 @@ def OpenPath(self):
         return messagebox.showerror("Error", "No se ha seleccionado ninguna tarea")
     HomeWorkPath = f"{Path}\\Tareas\\{Class}\\{Homework}".replace("/", "\\") 
     subprocess.Popen(r'explorer /select,"{FilePath}"'.format(FilePath=HomeWorkPath))
+
+def DoctoPdf(self):
+    Path = getPath()
+    try:
+        Homework = self.view_tree.item(self.view_tree.selection())['text'].split("'")[1]
+        Class = self.view_tree.item(self.view_tree.selection())['values'][0]
+    except:
+        return messagebox.showerror("Error", "No se ha seleccionado ninguna tarea")
+    DocPath = f"{Path}\Tareas\{Class}\{Homework}"
+    
+    if not DocPath.endswith(".docx"):
+        return messagebox.showerror("Error", "El archivo seleccionado no es un documento de word")
+    docx2pdf.convert(DocPath)
+    os.startfile(DocPath.replace(".docx", ".pdf"))
