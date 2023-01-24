@@ -3,34 +3,8 @@ from tkinter import ttk, messagebox
 import calendar
 from datetime import date
 from Core.Database import insert_db, search_DayData, delete_Nota
+from Clases.Entidades import Dia
 
-class Dia(Label):
-    def __init__(self, *args, **kwargs):
-        date = kwargs.pop('date', None)
-        super().__init__(*args,**kwargs)
-        self.Dia = date.day
-        self.Mes = date.month
-        self.Año = date.year
-        self.__Notas = []
-        
-    def addNota(self, descripcion):
-        self.__Notas.append(descripcion)
-    def getDescripcion(self):
-        self.__Notas.sort(key=lambda x: ["Baja", "Media", "Alta","Urgente"].index(x[1]), reverse=True)
-        return self.__Notas
-    def getday(self):
-        return self.Dia
-    def getmonth(self):
-        return self.Mes
-    def getyear(self):
-        return self.Año
-    def updateDayData(self):
-        DayData = search_DayData(dia=self.Dia, mes=self.Mes, año=self.Año)
-        self.__Notas = []
-        if DayData:
-            for Data in DayData:
-                Id, dia, mes, año, descripcion, prioridad = Data
-                self.__Notas.append([Id, prioridad, descripcion])
 
 class NotasWin:
     def __init__(self, Toplevel, CalendaryInstance, WidgetDay):
@@ -92,15 +66,15 @@ class NotasWin:
             elif Prioridad == "Urgente":
                 self.view_tree.item(row, tags="Urgente")
     def addNota(self):
-        # if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
-        #     if self.Add_win.winfo_exists() if self.Add_win.winfo_exists() else False:
-        #         messagebox.showerror("Error", "Ya hay una ventana")
-        #         return self.Add_win.lift() 
-        self.Add_win = Toplevel()
+        if any(isinstance(x, Toplevel) for x in self.win.winfo_children()):
+            if (self.win.winfo_exists() if self.win.winfo_exists() else False):
+                messagebox.showerror("Error", "Ya hay una ventana para agregar pendientes abierta")
+                return self.Add_win.lift() 
+        self.Add_win = Toplevel(self.win)
         self.Add_win.resizable(width=False, height=False)
         self.Add_win.title = 'Agregar Nota'
         self.Add_win.geometry('300x200')
-        # self.Add_win.iconbitmap("Icono.ico")
+        self.Add_win.iconbitmap("Archivos/Icono.ico")
         def agg(Descripcion, Prioridad):
             if Descripcion == "":  
                 return messagebox.showerror("Error", "No has ingresado una descripción")
@@ -264,7 +238,7 @@ class Calendario:
         if any(isinstance(x, Toplevel) for x in self.window.winfo_children()):
             if (self.window.winfo_exists() if self.window.winfo_exists() else False):
                 messagebox.showerror("Error", "Ya hay una ventana de notas abierta")
-                return self.window.lift() 
+                return self.CalNotes.lift() 
         self.CalNotes = Toplevel(self.window)
         label = event.widget
         NotasWin(Toplevel = self.CalNotes ,CalendaryInstance = self, WidgetDay = label)

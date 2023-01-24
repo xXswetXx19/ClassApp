@@ -1,5 +1,5 @@
 import sqlite3 as sql
-db_name = "Registro.db"
+db_name = "database.db"
 
 def createDB():
     conn = sql.connect(db_name)

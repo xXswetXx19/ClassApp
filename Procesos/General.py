@@ -11,8 +11,6 @@ from Procesos.Principales import getPath, getMaterias, CreateDirs
 import docx2pdf
 Plantilla_Path = os.path.join("Archivos", "plantilla.docx")
 
-
-
 def updateList(self):
     self.Materias = getMaterias()
     self.entry["completevalues"] = self.Materias
