@@ -1,5 +1,5 @@
 import os
-from Core.Database import run_query
+from Core.Database import Query 
 from Procesos.Principales import getPath
 from tkinter import *
 from tkinter import messagebox
@@ -9,22 +9,12 @@ from docxtpl import DocxTemplate
 import subprocess
 from Procesos.Principales import getPath, getMaterias, CreateDirs
 import docx2pdf
+
+
 Plantilla_Path = os.path.join("Archivos", "plantilla.docx")
 
-def updateList(self):
-    self.Materias = getMaterias()
-    self.entry["completevalues"] = self.Materias
+db = Query()
 
-def FillTw(self):
-    clearTw(self)
-    db_rows = run_query('SELECT * FROM Materias')
-    for row in db_rows:
-        Materia = (row[1],)
-        self.tree.insert('', 0, text = row[0], values = Materia, tags=('Materias'))
-def clearTw(self):
-    records = self.tree.get_children()
-    for element in records:
-        self.tree.delete(element)
 
 def CreateTarea(self):
     Path = getPath() 
@@ -32,20 +22,20 @@ def CreateTarea(self):
         Materia = self.tree.item(self.tree.selection())["values"][0]
     except:
         return messagebox.showerror("Error", "Seleccione una materia")
-    DatosConfig = run_query("SELECT * FROM Configuracion").fetchone()
+    DatosConfig = db.run_query("SELECT * FROM Configuracion").fetchone()
     if not DatosConfig:
         return messagebox.showerror("Error", "Agregue sus datos en la configuracion para crear una tarea")
     Id, Nombres, Apellidos, Paralelo, Ruta = DatosConfig
     if not os.path.exists(f"{Path}\Tareas\{Materia}"):
         CreateDirs(self)
     Fecha = date.strftime(datetime.now(), "%d.%m.%Y")
-    Nums = run_query(f"SELECT cantidad FROM Cantidad WHERE Fecha = ?", (Fecha,))
+    Nums = db.run_query(f"SELECT cantidad FROM Cantidad WHERE Fecha = ?", (Fecha,))
     Result = list(Nums)
     if len(Result) > 0:
         Num = int(Result[0][0]) + 1
-        run_query(f"UPDATE Cantidad SET cantidad = ? WHERE Fecha = ?", (Num, Fecha))
+        db.run_query(f"UPDATE Cantidad SET cantidad = ? WHERE Fecha = ?", (Num, Fecha))
     else:
-        run_query(f"INSERT INTO Cantidad VALUES (NULL, ?, ?)", (Fecha, 1))
+        db.run_query(f"INSERT INTO Cantidad VALUES (NULL, ?, ?)", (Fecha, 1))
         Num = 1
     doc = DocxTemplate(Plantilla_Path)
     doc.render(
@@ -70,7 +60,7 @@ def removeMateria(self):
     Id = self.tree.item(self.tree.selection())["text"]
     if not Id:
         return messagebox.showerror("Error", "Seleccione una materia")
-    run_query(f"DELETE FROM Materias WHERE Id = ?", (Id,))
+    db.run_query(f"DELETE FROM Materias WHERE Id = ?", (Id,))
     FillTw(self)
 
 

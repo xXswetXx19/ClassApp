@@ -1,10 +1,12 @@
-from Core.Database import *
+from Core.Database import Query as db
 from tkinter import Tk
 from views.App import APP
+
 
 class Core:
     def __init__(self):
         self.master = Tk()
+        self.db = db()
 
     def start(self):
         self.startDatabase()
@@ -12,7 +14,7 @@ class Core:
         self.master.mainloop()
 
     def startDatabase(self):
-        createDB()
+        self.db.createDB()
 
 
 

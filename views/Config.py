@@ -1,10 +1,11 @@
 from tkinter import Button, Entry, Label, StringVar, W, messagebox, filedialog, DISABLED, CENTER
-from Core.Database import run_query
+from Core.Database import Query
+db = Query()
 
 
 from Procesos.Principales import getPath, getMaterias
 class ConfigWin:
-    def __init__(self, toplevel):
+    def __init__(self, toplevel, master):
         self.Config_win = toplevel
         self.Config_win.resizable(width=False, height=False)
         self.Config_win.title = 'Configuración'
@@ -12,7 +13,7 @@ class ConfigWin:
         self.Config_win.iconbitmap("Archivos/Icono.ico")
 
         Path = getPath()
-        self.ConfigData = run_query('SELECT * FROM Configuracion').fetchone()
+        self.ConfigData = db.run_query('SELECT * FROM Configuracion').fetchone()
         Datos = ["Nombres:", "Apellidos:", "Paralelo:", "Ruta:"]
         
         for i in Datos:
@@ -40,11 +41,11 @@ class ConfigWin:
         if self.ConfigData:
             Id = self.ConfigData[0]
             query = f'UPDATE Configuracion SET Nombres = ?, Apellidos = ?, Paralelo = ?, Ruta = ? WHERE Id = ?'
-            run_query(query, (Nombres.strip(), Apellidos.strip(), Paralelo.strip(), Ruta, Id))
+            db.run_query(query, (Nombres.strip(), Apellidos.strip(), Paralelo.strip(), Ruta, Id))
             self.Config_win.destroy()
         else: 
             query = f'INSERT INTO Configuracion VALUES(NULL, ?, ?, ?, ?)'
-            run_query(query, (Nombres, Apellidos, Paralelo, Ruta))
+            db.run_query(query, (Nombres, Apellidos, Paralelo, Ruta))
             self.Config_win.destroy()
         # getPath()
     def browsedir(self):

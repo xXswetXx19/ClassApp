@@ -1,76 +1,54 @@
 import sqlite3 as sql
-db_name = "database.db"
 
-def createDB():
-    conn = sql.connect(db_name)
-    conn.commit()
-    conn.close()
+class Query(object):
+    def __init__(self) -> None:
+        self.database = "database.db"
     
-    createTableCantidad()
-    createTableConfig()
-    createTableMaterias()
-    createTableNotas()
-
-def run_query(query, parametros = ()):
-    with sql.connect(db_name) as conn:
-        cursor = conn.cursor()
-        result = cursor.execute(query, parametros)
+    def createDB(self):
+        conn = sql.connect(self.database)
         conn.commit()
-    return result
-
-def createTableMaterias():
-    run_query("""CREATE TABLE IF NOT EXISTS Materias (
-        Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        Materia text)""")
-
-def createTableCantidad():
-    run_query("""CREATE TABLE IF NOT EXISTS Cantidad (
-        Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        Fecha text, 
-        cantidad text)""")
-
-def createTableConfig():
-    run_query("""
-        CREATE TABLE IF NOT EXISTS Configuracion (
-            Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            Nombres text, 
-            Apellidos text,
-            Paralelo text,
-            Ruta text)""")
-
-def createTableNotas():
-    run_query("""
-        CREATE TABLE IF NOT EXISTS Notas (
-            id INTEGER PRIMARY KEY,
-            dia INTEGER,
-            mes INTEGER,
-            año INTEGER,
-            descripcion TEXT,
-            prioridad TEXT
-            )""")
+        conn.close()
+        
+        self.createTables()
 
 
+    def run_query(self,query, parametros = ()):
+        with sql.connect(self.database) as conn:
+            cursor = conn.cursor()
+            result = cursor.execute(query, parametros)
+            conn.commit()
+        return result
+
+        
+    def createTables(self):
+        tables = [
+            "CREATE TABLE IF NOT EXISTS Materia (Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Materia text)",
+            "CREATE TABLE IF NOT EXISTS Tarea (Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Fecha text, Materia text)",
+            "CREATE TABLE IF NOT EXISTS Configuracion (Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Nombres text, Apellidos text, Paralelo text, Ruta text)",
+            "CREATE TABLE IF NOT EXISTS Nota (id INTEGER PRIMARY KEY, dia INTEGER, mes INTEGER, año INTEGER, descripcion TEXT, prioridad TEXT)"
+        ]
+        for table in tables:
+            self.run_query(table)    
+        
+    def insert_db(self, dia, mes, año, descripcion, prioridad):
+        self.run_query("INSERT INTO Notas VALUES (NULL, ?, ?, ?, ?, ?)", (dia, mes, año, descripcion, prioridad))
 
 
+    def delete_Nota(self, id):
+        self.run_query("DELETE FROM Notas WHERE id = ?", (id,))
+    
 
-
-
-def insert_db(dia, mes, año, descripcion, prioridad):
-    run_query("INSERT INTO Notas VALUES (NULL, ?, ?, ?, ?, ?)", (dia, mes, año, descripcion, prioridad))
-
-
-def delete_Nota(id):
-    run_query("DELETE FROM Notas WHERE id = ?", (id,))
- 
-
-def search_DayData(**kwargs):
-    Id = kwargs.get('Id', None)
-    if Id:
-        rows = run_query("SELECT * FROM Notas WHERE id = ?", (Id,)).fetchone()
-        return rows if len(rows) != 0 else None
-    else:
-        dia = kwargs.get('dia', None)
-        mes = kwargs.get('mes', None)
-        año = kwargs.get('año', None)
-        rows = run_query("SELECT * FROM Notas WHERE dia = ? AND mes = ? AND año = ?", (dia, mes, año)).fetchall()
-        return rows if len(rows) != 0 else None
+    def search_DayData(self, **kwargs):
+        Id = kwargs.get('Id', None)
+        if Id:
+            rows = self.run_query("SELECT * FROM Notas WHERE id = ?", (Id,)).fetchone()
+            return rows if len(rows) != 0 else None
+        else:
+            dia = kwargs.get('dia', None)
+            mes = kwargs.get('mes', None)
+            año = kwargs.get('año', None)
+            rows = self.run_query("SELECT * FROM Notas WHERE dia = ? AND mes = ? AND año = ?", (dia, mes, año)).fetchall()
+            return rows if len(rows) != 0 else None
+        
+    def getMaterias(self):
+        return self.run_query("SELECT Materia FROM Materia").fetchall()

@@ -1,8 +1,7 @@
-from tkinter import Frame, Button, Label, Entry, W, E, CENTER, BOTH, LEFT, NO, ttk, Toplevel, messagebox
-from Clibs.Autocomplete import AutocompleteCombobox
-from Procesos.Configuracion import getHomeworks, DeleteHomework, OpenHomework, OpenPath
-from Procesos.General import FillTw, updateList, CreateDirs, CreateTarea, clearTw, clearviewTw,removeMateria
-from Procesos.Principales import getPath, getMaterias, CreateDirs
+from tkinter import Frame, Button, W, E, CENTER, BOTH, LEFT, NO, ttk, Toplevel, messagebox
+from Components.auto_search import auto_searchTw
+from Procesos.General import CreateTarea, removeMateria
+from Procesos.Principales import  getMaterias
 from views.Calendary import calendar
 from views.Config import ConfigWin
 from views.Tareas import HomeworksWindow
@@ -20,14 +19,11 @@ class APP:
             "Agregar_Materia": addMateriaView
         }
 
-
         self.getWindow()
         self.getButtons()
-        self.getEntries()
         self.getTreeviewer()
-        FillTw(self)
-        updateList(self)
-    
+        self.getEntries()
+
     def getWindow(self):
         self.master.title("Gestor de tareas")
         self.master.geometry("521x248")
@@ -41,10 +37,6 @@ class APP:
         # Packing Frames
         self.TWframe.pack(expand = True, fill = BOTH, side=LEFT)
         self.frame.pack(expand=True, fill=BOTH, side=LEFT)
-    
-
-
-
 
     def getButtons(self):
         ButtonsData = {
@@ -62,13 +54,10 @@ class APP:
             Button(self.frame, text = list(ButtonsData.keys())[i], command = list(ButtonsData.values())[i], width=30).pack(fill=BOTH, expand=True)
         
     def getEntries(self):
-        # Creating Search Bar and placing it
-        self.entry = AutocompleteCombobox(self.TWframe, width=25,completevalues = lambda: [])
+        values = getMaterias()
+        self.entry = auto_searchTw(self.TWframe, width=25,completevalues = values, Treeview=self.tree)
         self.entry.grid(row = 0, column = 0,sticky = W + E)
-        
-        # Event binds
-        self.entry.bind('<KeyPress>', self.__update)
-        self.entry.bind("<FocusIn>", self.__update)
+    
     
     def getTreeviewer(self):
         # Creating Treeview and placing it
@@ -81,52 +70,20 @@ class APP:
         # Treeview Configuration
         self.tree.tag_configure('Materias', font=("", 10), foreground = 'Black')
         
-
-
     def open_view(self, tipo):
         if tipo in self.open_windows:
-            self.open_windows[tipo].lift()
-            return messagebox.showerror("Error", "Ya hay una ventana de calendario abierta")
-            
-            
+            messagebox.showerror("Error", "Ya hay una ventana de calendario abierta")
+            return self.open_windows[tipo].lift()
         ventana_actual = Toplevel(self.master)
         self.open_windows[tipo] = ventana_actual
-        ventana_actual.protocol("WM_DELETE_WINDOW", lambda: self.close_view(tipo))
+        ventana_actual.protocol("WM_DELETE_WINDOW", lambda: close_view(tipo))
             
         clase = self.views[tipo]
-        vista_instance = clase(ventana_actual)
+        vista_instance = clase(ventana_actual, self)
 
-    def close_view(self, tipo):
-        ventana_actual = self.open_windows.pop(tipo, None)
-        if ventana_actual:
-            ventana_actual.destroy()
-            
-            
-            
-            
-            
+        def close_view(tipo):
+            ventana_actual = self.open_windows.pop(tipo, None)
+            if ventana_actual:
+                ventana_actual.destroy()
             
     
-    def __update(self, event):
-        query = self.entry.get()
-        selections = []
-        if event.keysym == "BackSpace":
-            if self.entry.selection_present():
-                query = query.replace(query.selection_get(), "")
-        else:
-            query = query[:-1]
-        if event.char.isalnum() and query == "":
-            query += event.char
-        if query != "":
-            FillTw(self)
-            for child in self.tree.get_children():
-                if self.tree.item(child)['values']:
-                    if str(query.lower()) in self.tree.item(child)['values'][0].lower():
-                        selections.append(child)
-            for child in self.tree.get_children():
-                if child not in selections:
-                    self.tree.detach(child)
-        else:
-            FillTw(self)
-        if len(selections) == 1:
-            self.tree.selection_set(selections)

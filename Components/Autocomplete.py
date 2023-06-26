@@ -268,6 +268,9 @@ bind $popdown.f.l <KeyPress> [list ComboListKeyPressed %%W %%K]
         if event.keysym == "BackSpace":
             self.delete(self.index(tk.INSERT), tk.END)
             self.position = self.index(tk.END)
+            if self.get() == '':
+                self._hits = []
+                self._hit_index = 0
         if event.keysym == "Left":
             if self.position < self.index(tk.END):  # delete the selection
                 self.delete(self.position, tk.END)

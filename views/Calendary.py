@@ -2,9 +2,10 @@ from tkinter import *
 from tkinter import ttk, messagebox
 import calendar
 from datetime import date
-from Core.Database import insert_db, search_DayData, delete_Nota
+from Core.Database import Query
 from Clases.Entidades import Dia
 
+db = Query()
 
 class NotasWin:
     def __init__(self, Toplevel, CalendaryInstance, WidgetDay):
@@ -81,7 +82,7 @@ class NotasWin:
             day = self.Diaclass.getday()
             month = self.Diaclass.getmonth()
             year = self.Diaclass.getyear()
-            insert_db(day, month, year, Descripcion, Prioridad)
+            db.insert_db(day, month, year, Descripcion, Prioridad)
             self.calendario.filldays(month, year)
             self.fill_tree()
             
@@ -106,9 +107,9 @@ class NotasWin:
             return self.win.lift()
         ask = messagebox.askyesno("Eliminar", "¿Esta seguro de eliminar la Nota?")
         if ask:
-            Data = search_DayData(Id = Id)
+            Data = db.search_DayData(Id = Id)
             Id, dia, mes, año, Descripcion, Prioridad = Data
-            delete_Nota(Id)
+            db.delete_Nota(Id)
             self.calendario.filldays(mes, año)
             self.fill_tree()
 

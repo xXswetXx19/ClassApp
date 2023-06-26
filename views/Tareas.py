@@ -5,7 +5,7 @@ from tkinter.ttk import Combobox, Button
 
 
 class HomeworksWindow:
-    def __init__(self, toplevel):
+    def __init__(self, toplevel, master):
         self.view_wins = toplevel
         self.view_wins.title("Tareas")
         self.view_wins.geometry("800x275")

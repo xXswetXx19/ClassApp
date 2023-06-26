@@ -1,14 +1,14 @@
-from Core.Database import run_query
+from Core.Database import Query
 import os
-
+db = Query()
 def getPath():
-    Path = run_query("SELECT Ruta FROM Configuracion").fetchone()
+    Path = db.run_query("SELECT Ruta FROM Configuracion").fetchone()
     Path = Path[0] if Path else os.getcwd()
     return Path
 
 
 def getMaterias():
-    Materias = run_query("SELECT Materia FROM Materias").fetchall()
+    Materias = db.run_query("SELECT Materia FROM Materias").fetchall()
     Materias = [i[0] for i in Materias]
     return Materias
 
