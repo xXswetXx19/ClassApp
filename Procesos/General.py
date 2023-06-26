@@ -73,38 +73,6 @@ def removeMateria(self):
     run_query(f"DELETE FROM Materias WHERE Id = ?", (Id,))
     FillTw(self)
 
-def addMateria(self):
-    if any(isinstance(x, Toplevel) for x in self.master.winfo_children()):
-        if self.Add_win.winfo_exists() if self.Add_win.winfo_exists() else False:
-            messagebox.showerror("Error", "Ya hay una ventana")
-            return self.Add_win.lift()
-    self.Add_win = Toplevel()
-    self.Add_win.resizable(width=False, height=False)
-    self.Add_win.title = "Agregar Materia"
-    self.Add_win.geometry("300x100")
-    # self.Add_win.iconbitmap("Icono.ico")
-
-    def agg(Value):
-        Value = Value.strip().capitalize()
-        if not Value:
-            return messagebox.showerror(
-                "Error", "No se puede agregar un campo vacio"
-            )
-        if not Value.replace(" ", "").isalnum():  # Revisa que value solo tenga numeros y letras, nada de simbolos
-            return messagebox.showerror("Error", "El nombre de la materia solo puede contener letras y numeros")
-        if run_query(f"SELECT * FROM Materias WHERE Materia = ?", (Value,)).fetchone():
-            return messagebox.showerror("Error", "La materia ya existe")
-        run_query(f"INSERT INTO Materias VALUES(NULL, (?))", (Value,))
-        self.Add_win.destroy()
-        FillTw(self)
-        CreateDirs()
-        updateList(self)
-
-    LMateria = Label(self.Add_win, text="Materia: ").place(anchor=CENTER, relx=0.2, rely=0.3)
-    CMateria = Entry(self.Add_win, width=30)
-    CMateria.place(anchor=CENTER, relx=0.6, rely=0.3)
-    Boton = Button(self.Add_win, text="Agregar", command=lambda: agg(CMateria.get())).place(anchor=CENTER, relx=0.5, rely=0.7)
-    self.Add_win.bind("<Return>", lambda event: agg(CMateria.get()))
 
 def clearviewTw(self):
     records = self.view_tree.get_children()

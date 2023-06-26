@@ -5,6 +5,11 @@ def createDB():
     conn = sql.connect(db_name)
     conn.commit()
     conn.close()
+    
+    createTableCantidad()
+    createTableConfig()
+    createTableMaterias()
+    createTableNotas()
 
 def run_query(query, parametros = ()):
     with sql.connect(db_name) as conn:
@@ -43,6 +48,11 @@ def createTableNotas():
             descripcion TEXT,
             prioridad TEXT
             )""")
+
+
+
+
+
 
 
 def insert_db(dia, mes, año, descripcion, prioridad):
