@@ -1,7 +1,7 @@
 
 from tkinter import Button, Label, Entry, CENTER, messagebox
-from Procesos.General import CreateDirs
 from Core.Database import Query
+
 class addMateriaView():
     def __init__(self, toplevel, master) -> None:
         self.master = master
@@ -42,7 +42,7 @@ class addMateriaView():
         self.db.run_query(f"INSERT INTO Materias VALUES(NULL, (?))", (Value,))
         self.Add_win.destroy()
         materias = self.db.getMaterias()
-        self.master.entry.update_completion_list(materias)         
+        self.master.entry.update_completion_list(materias)
         CreateDirs()
 
 

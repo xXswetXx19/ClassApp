@@ -2,8 +2,6 @@ from tkinter import Button, Entry, Label, StringVar, W, messagebox, filedialog, 
 from Core.Database import Query
 db = Query()
 
-
-from Procesos.Principales import getPath, getMaterias
 class ConfigWin:
     def __init__(self, toplevel, master):
         self.Config_win = toplevel

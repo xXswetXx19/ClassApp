@@ -1,4 +1,5 @@
 import sqlite3 as sql
+import os
 
 class Query(object):
     def __init__(self) -> None:
@@ -8,7 +9,6 @@ class Query(object):
         conn = sql.connect(self.database)
         conn.commit()
         conn.close()
-        
         self.createTables()
 
 
@@ -23,7 +23,7 @@ class Query(object):
     def createTables(self):
         tables = [
             "CREATE TABLE IF NOT EXISTS Materia (Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Materia text)",
-            "CREATE TABLE IF NOT EXISTS Tarea (Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Fecha text, Materia text)",
+            "CREATE TABLE IF NOT EXISTS Tarea (Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Materia text, Documento text, Numero int, FechaHora datetime)",
             "CREATE TABLE IF NOT EXISTS Configuracion (Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Nombres text, Apellidos text, Paralelo text, Ruta text)",
             "CREATE TABLE IF NOT EXISTS Nota (id INTEGER PRIMARY KEY, dia INTEGER, mes INTEGER, año INTEGER, descripcion TEXT, prioridad TEXT)"
         ]
@@ -50,5 +50,58 @@ class Query(object):
             rows = self.run_query("SELECT * FROM Notas WHERE dia = ? AND mes = ? AND año = ?", (dia, mes, año)).fetchall()
             return rows if len(rows) != 0 else None
         
-    def getMaterias(self):
-        return self.run_query("SELECT Materia FROM Materia").fetchall()
+    def getMateriasList(self):
+        Materias = self.run_query("SELECT Materia FROM Materia").fetchall()
+        return [i[0] for i in Materias]
+    
+    def deleteMateria(self, materia):
+        self.run_query("DELETE FROM Materia WHERE Materia = ?", (materia,))
+        
+    def getHomeworksPath(self):
+        Path = self.run_query("SELECT Ruta FROM Configuracion").fetchone()
+        Path = Path[0] if Path else os.getcwd()
+        return Path
+
+    def getConfigData(self):
+        DatosConfig = self.query.run_query("SELECT * FROM Configuracion").fetchone()
+        return DatosConfig
+
+    def getHomeworksList(self, fecha = None):
+        if not fecha:
+            return self.run_query("SELECT * FROM Tarea").fetchall()
+        return self.run_query("SELECT * FROM Tarea WHERE Fecha = ?", (fecha,)).fetchall()
+    
+    def createHomework(self, fecha, materia):
+        self.run_query("INSERT INTO Tarea VALUES (NULL, ?, ?)", (fecha, materia))
+        
+    
+
+    def createFakeHomeworks(self):
+        import random
+        import string
+        from datetime import datetime, timedelta
+
+        def generar_registros(num_registros):
+            registros = []
+            fecha_actual = datetime.now()
+
+            for _ in range(num_registros):
+                materia = ''.join(random.choices(string.ascii_uppercase, k=2))
+                documento = "Documento " + ''.join(random.choices(string.ascii_uppercase, k=2))
+                numero = random.randint(1, 10)
+                fecha_hora = fecha_actual.strftime("%Y-%m-%d %H:%M:%S")
+
+                registros.append((materia, documento, numero, fecha_hora))
+
+                fecha_actual += timedelta(days=1)
+
+            return registros
+
+        registros = generar_registros(100)
+
+        for registro in registros:
+            query = "INSERT INTO Tarea (Materia, Documento, Numero, FechaHora) VALUES (?, ?, ?, ?)"
+            self.run_query(query, registro)
+            query = "INSERT INTO Materia (Materia) VALUES (?)"
+            self.run_query(query, (registro[0],))
+

@@ -1,16 +1,17 @@
 from tkinter import Frame, Button, W, E, CENTER, BOTH, LEFT, NO, ttk, Toplevel, messagebox
 from Components.auto_search import auto_searchTw
-from Procesos.General import CreateTarea, removeMateria
-from Procesos.Principales import  getMaterias
 from views.Calendary import calendar
 from views.Config import ConfigWin
-from views.Tareas import HomeworksWindow
+from views.Homeworks import HomeworksWindow
 from views.addMateria import addMateriaView
+from Procesos.Homeworks import HomeworkProcess
+from Core.Database import Query
 
 class APP:
     def __init__(self, master):
         self.master = master
         self.open_windows = {}
+        self.query = Query()
         
         self.views = {
             "Tareas": HomeworksWindow,
@@ -23,6 +24,8 @@ class APP:
         self.getButtons()
         self.getTreeviewer()
         self.getEntries()
+        
+        self.TreeviewProcess = HomeworkProcess(self.entry)
 
     def getWindow(self):
         self.master.title("Gestor de tareas")
@@ -40,12 +43,12 @@ class APP:
 
     def getButtons(self):
         ButtonsData = {
-            "Crear Tarea": lambda: CreateTarea(self),
+            "Crear Tarea": lambda: self.TreeviewProcess.CreateTarea(),
             "Ver Tareas": lambda: self.open_view("Tareas"),
             "Calendario": lambda: self.open_view("Calendario"),
             "Configuracion":  lambda: self.open_view("Configuracion"),
             "Agregar Materia": lambda: self.open_view("Agregar_Materia"),
-            "Eliminar Materia": lambda: removeMateria(self),
+            "Eliminar Materia": lambda: self.TreeviewProcess.removeMateria(),
             "Salir": self.master.destroy
             # "Ver Pendientes": Pendientes,
         }
@@ -54,7 +57,7 @@ class APP:
             Button(self.frame, text = list(ButtonsData.keys())[i], command = list(ButtonsData.values())[i], width=30).pack(fill=BOTH, expand=True)
         
     def getEntries(self):
-        values = getMaterias()
+        values = self.query.getMateriasList()
         self.entry = auto_searchTw(self.TWframe, width=25,completevalues = values, Treeview=self.tree)
         self.entry.grid(row = 0, column = 0,sticky = W + E)
     
@@ -86,4 +89,5 @@ class APP:
             if ventana_actual:
                 ventana_actual.destroy()
             
+    
     
