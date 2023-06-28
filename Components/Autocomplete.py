@@ -279,9 +279,11 @@ bind $popdown.f.l <KeyPress> [list ComboListKeyPressed %%W %%K]
                 self.delete(self.position, tk.END)
         if event.keysym == "Right":
             self.position = self.index(tk.END)  # go to end (no selection)
+        
         if event.keysym == "Return":
             self.handle_return(None)
             return
+        
         if len(event.keysym) == 1:
             if self.last_eval and event.time - self.last_eval[1] > self.min_delta: #Agregado por samuel
                 self.autocomplete()

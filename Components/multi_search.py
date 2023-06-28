@@ -1,7 +1,7 @@
 from Components.Autocomplete import AutocompleteCombobox
 
 class multi_search (AutocompleteCombobox):
-    def __init__ (self, master=None, completevalues=None, Treeview=None, column=None,  **kwargs):
+    def __init__ (self, master=None, completevalues=None, Treeview=None, column=None, filters={},  **kwargs):
         super().__init__(master, completevalues, **kwargs)
 
         self.treeview = Treeview
@@ -9,9 +9,12 @@ class multi_search (AutocompleteCombobox):
         self.treeItems = self.treeview.get_children()
         self.treeview_values = completevalues
         self.column_values = []
+        self.search_filters = filters
+        
         self.setTreeview()
         self.bind("<<ComboboxSelected>>", self.handle_list_selection)
-        
+        self.bind("<Tab>", self.handle_keyrelease)
+
 
     def setTreeview(self):
         self.clear_Treeview()
@@ -26,11 +29,12 @@ class multi_search (AutocompleteCombobox):
             
  
     def clear_Treeview(self):
-        for child in self.treeview.get_children():
+        for child in set(self.treeview.get_children()):
             self.treeview.detach(child)
     
     def fill_Treeview(self):
-        for child in self.treeItems:
+        self.clear_Treeview()        
+        for child in set(self.treeItems):
             self.treeview.move(child, '', 0)
 
     
@@ -38,24 +42,59 @@ class multi_search (AutocompleteCombobox):
         value = self.get()
         self.fill_Treeview()
         if value:
-            for child in self.treeview.get_children():
-                if self.treeview.item(child)["values"][self.treeviewColumn]:                 
-                    itemValue = self.treeview.item(child)["values"][self.treeviewColumn]
-                    if itemValue != value:
-                        self.treeview.detach(child)
-    
+            self.search_filters[str(self.treeviewColumn)] = value
+            filtereds = self.filter_treeview(event)
+            
+            self.clear_Treeview()
+            for child in filtereds:
+                self.treeview.move(child, '', 0)    
+                
+    def filter_treeview(self, event):
+        self.fill_Treeview()
+        childs = set(self.treeview.get_children())
+        for row in set(self.treeview.get_children()):
+            for column_index in self.search_filters.keys():
+                column_value = str(self.treeview.item(row)["values"][int(column_index)])
+                if self.search_filters[column_index]:
+                    if (column_value not in set(self.search_filters[column_index])) and (column_value != self.search_filters[column_index]):
+                        childs.remove(row)
+                        break
+        return childs 
+
     def handle_keyrelease(self, event):
         super().handle_keyrelease(event)
-        if self._hits:
-            for child in self.treeview.get_children():
-                if self.treeview.item(child)["values"][self.treeviewColumn]:                 
-                    itemValue = self.treeview.item(child)["values"][self.treeviewColumn]
-                    print(itemValue)
-                    print(self._hits)
-                    if itemValue not in self._hits:
-                        self.treeview.detach(child)
-        else:
-            self.fill_Treeview()
+        hits = set(self._hits)
+    
+        if event.send_event and event.keysym == "Tab":
+            if self.get():    
+                hits = set([self.get()])
+            else:
+                hits = set()
+        elif event.keysym == "Tab" and not event.send_event:
+            return 
+       
+        self.search_filters[str(self.treeviewColumn)] = hits
+        filtereds = self.filter_treeview(event)
+        
+        if event.keysym == "BackSpace" and not self.get():
+            self.search_filters[str(self.treeviewColumn)] = set()
+    
+        self.clear_Treeview()
+        for child in filtereds:
+            self.treeview.move(child, '', 0)           
+
+
+
+            
+            
+        
+        
+        
+        
+        
+        
+        
+
 
     def set_tw_completion_list(self, new_completion_list):
         self.treeview_values = new_completion_list

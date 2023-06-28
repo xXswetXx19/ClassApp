@@ -86,22 +86,39 @@ class Query(object):
             fecha_actual = datetime.now()
 
             for _ in range(num_registros):
-                materia = ''.join(random.choices(string.ascii_uppercase, k=2))
-                documento = "Documento " + ''.join(random.choices(string.ascii_uppercase, k=2))
-                numero = random.randint(1, 10)
-                fecha_hora = fecha_actual.strftime("%Y-%m-%d %H:%M:%S")
+                cantidad = random.randint(1, 5)
+                Materias = ["Lenguaje", "Matematicas avanzadas", "Ciencias Naturales", "Fisica", "Desarrollo de Software", "Programacion"]
+                for _ in range(cantidad):
+                    materia = ''.join(random.choices(Materias, k=1))
+                    documento = "Documento " + ''.join(random.choices(string.ascii_uppercase, k=2))
+                    
+                    fecha_hora = fecha_actual.strftime("%Y-%m-%d %H:%M:%S")
 
-                registros.append((materia, documento, numero, fecha_hora))
+                    obj = {}
+                    for registro in registros:
+                        materiac, documentoc, numeroc, fecha_horac = registro
+                        Fecha = datetime.strptime(fecha_horac, "%Y-%m-%d %H:%M:%S")
+                        Fecha = Fecha.strftime("%Y-%m-%d")
+                        obj[Fecha] = obj.get(Fecha, 0) + 1
+
+                    Fecha = fecha_hora.split(" ")[0]
+                    numero = obj.get(Fecha, 0) + 1
+
+                    
+                    registros.append((materia, documento, numero, fecha_hora))
 
                 fecha_actual += timedelta(days=1)
 
             return registros
+        
 
         registros = generar_registros(100)
 
         for registro in registros:
             query = "INSERT INTO Tarea (Materia, Documento, Numero, FechaHora) VALUES (?, ?, ?, ?)"
             self.run_query(query, registro)
+        Materias = ["Lenguaje", "Matematicas avanzadas", "Ciencias Naturales", "Fisica", "Desarrollo de Software", "Programacion"]
+        for Materia in Materias:
             query = "INSERT INTO Materia (Materia) VALUES (?)"
-            self.run_query(query, (registro[0],))
+            self.run_query(query, (Materia,))
 

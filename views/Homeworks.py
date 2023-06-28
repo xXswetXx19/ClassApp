@@ -11,7 +11,7 @@ class HomeworksWindow:
         self.view_wins = toplevel
         self.query = Query()        
         self.Materias = self.query.getMateriasList()
-        
+        self.search_filters = {}
         self.getWindow()
         # self.getButtons()
         self.getTreeview()
@@ -49,19 +49,19 @@ class HomeworksWindow:
         
         
     def getEntries(self):    
-        self.MateriasEntry = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 0)
+        self.MateriasEntry = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 0, filters=self.search_filters)
         self.MateriasEntry.grid(row = 0, column = 0,sticky = W + E)
         
-        self.DocumentEntry  = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 1)
+        self.DocumentEntry  = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 1, filters=self.search_filters)
         self.DocumentEntry.grid(row = 0, column = 1,sticky = W + E)
         
-        self.NumEntry = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 2)
+        self.NumEntry = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 2, filters=self.search_filters)
         self.NumEntry.grid(row = 0, column = 2,sticky = W + E)
         
-        self.DateEntry = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 3)
+        self.DateEntry = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 3, filters=self.search_filters)
         self.DateEntry.grid(row = 0, column = 3,sticky = W + E)
 
-        self.TimeEntry = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 4)
+        self.TimeEntry = multi_search(self.view_topframes, width=10, font=('', 12), completevalues = (), Treeview = self.treeview, column = 4, filters=self.search_filters)
         self.TimeEntry.grid(row = 0, column = 4,sticky = W + E)
         
         
@@ -100,41 +100,37 @@ class HomeworksWindow:
     #     getHomeworks(self)
 
 
-    def updateEntryAndTw (self):
+    def updateEntryAndTw(self):
         Homeworks = self.query.getHomeworksList()
-        Documents = [i[2] for i in Homeworks]
-        Num = []
-        Date = []
-        Time = []
-        Materias = self.query.getMateriasList()
-
+        Materias = set(self.query.getMateriasList())
+        Documents = {i[2] for i in Homeworks}
+        
+        
         Lista_organizada = []
-        num = self.query.run_query("SELECT COUNT(*) AS NumTareas FROM Tarea GROUP BY DATE(FechaHora) ORDER BY NumTareas DESC LIMIT 1").fetchall()[0][0]
-        for i in range(num):
-            Num.append(str(i+1))
-            
+        
+        Num = self.query.run_query("SELECT COUNT(*) AS NumTareas FROM Tarea GROUP BY DATE(FechaHora) ").fetchall()
+        Num = max(tupla[0] for tupla in Num)
+        Num = [str(i) for i in range(Num) if i != 0]
+        
+        
+        
         for i in Homeworks:
-            # i[1] is datetime string
             Datetime = datetime.strptime(i[4], '%Y-%m-%d %H:%M:%S')
             DateV = Datetime.strftime('%d/%m/%Y')
             TimeV = Datetime.strftime('%H:%M:%S')
-            Date.append(DateV)
-            Time.append(TimeV)
             
             Lista_organizada.append([i[0], i[1], i[2], i[3], DateV, TimeV])
             
         Lista_organizada = sorted(Lista_organizada, key=lambda x: x[0])
-        
+
         self.MateriasEntry.set_column_completion_list(Materias)
         self.DocumentEntry.set_column_completion_list(Documents)
         self.NumEntry.set_column_completion_list(Num)
-        self.DateEntry.set_column_completion_list(Date)
-        self.TimeEntry.set_column_completion_list(Time)
-        
-        
+        self.DateEntry.set_column_completion_list({date[4] for date in Lista_organizada})
+        self.TimeEntry.set_column_completion_list({time[5] for time in Lista_organizada})
+
         self.MateriasEntry.set_tw_completion_list(Lista_organizada)
         self.DocumentEntry.set_tw_completion_list(Lista_organizada)
         self.NumEntry.set_tw_completion_list(Lista_organizada)
         self.DateEntry.set_tw_completion_list(Lista_organizada)
         self.TimeEntry.set_tw_completion_list(Lista_organizada)
-        
