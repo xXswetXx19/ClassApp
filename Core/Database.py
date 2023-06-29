@@ -1,5 +1,6 @@
 import sqlite3 as sql
 import os
+import random
 
 class Query(object):
     def __init__(self) -> None:
@@ -93,16 +94,33 @@ class Query(object):
                     documento = "Documento " + ''.join(random.choices(string.ascii_uppercase, k=2))
                     
                     fecha_hora = fecha_actual.strftime("%Y-%m-%d %H:%M:%S")
+                    # change the hour values 
+
+                    hora = random.randint(0, 23)
+                    hora = str(hora).zfill(2)  # Agrega un cero inicial si es necesario
+
+                    minutos = random.randint(0, 59)
+                    minutos = str(minutos).zfill(2)  # Agrega un cero inicial si es necesario
+
+                    segundos = random.randint(0, 59)
+                    segundos = str(segundos).zfill(2)  # Agrega un cero inicial si es necesario
+
+                    
+                    
+                    
+                    fecha_hora = fecha_hora.split(" ")[0] + " " + hora + ":" + minutos + ":" + segundos
+
 
                     obj = {}
                     for registro in registros:
                         materiac, documentoc, numeroc, fecha_horac = registro
                         Fecha = datetime.strptime(fecha_horac, "%Y-%m-%d %H:%M:%S")
                         Fecha = Fecha.strftime("%Y-%m-%d")
-                        obj[Fecha] = obj.get(Fecha, 0) + 1
+                        obj[f"{Fecha}-{materiac}"] = obj.get(f"{Fecha}-{materiac}", 0) + 1
+                        
 
                     Fecha = fecha_hora.split(" ")[0]
-                    numero = obj.get(Fecha, 0) + 1
+                    numero = obj.get(f"{Fecha}-{materia}", 0) + 1
 
                     
                     registros.append((materia, documento, numero, fecha_hora))

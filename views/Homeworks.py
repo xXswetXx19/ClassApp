@@ -108,12 +108,10 @@ class HomeworksWindow:
         
         Lista_organizada = []
         
-        Num = self.query.run_query("SELECT COUNT(*) AS NumTareas FROM Tarea GROUP BY DATE(FechaHora) ").fetchall()
+        Num = self.query.run_query("SELECT max(Numero) AS NumTareas FROM Tarea GROUP BY DATE(FechaHora) ").fetchall()
         Num = max(tupla[0] for tupla in Num)
-        Num = [str(i) for i in range(Num) if i != 0]
-        
-        
-        
+        Num = [str(i) for i in range(Num + 1) if i != 0]
+
         for i in Homeworks:
             Datetime = datetime.strptime(i[4], '%Y-%m-%d %H:%M:%S')
             DateV = Datetime.strftime('%d/%m/%Y')
