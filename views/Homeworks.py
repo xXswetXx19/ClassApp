@@ -1,10 +1,9 @@
 from tkinter import Frame, BOTH, W, E, CENTER, NO, ttk
-from tkinter.ttk import Combobox, Button
+from tkinter.ttk import Button
 from Components.multi_search import multi_search
 from Core.Database import Query
 from datetime import datetime
-
-
+from Clases.Tarea import Tarea
 
 class HomeworksWindow:
     def __init__(self, toplevel, master):
@@ -13,12 +12,12 @@ class HomeworksWindow:
         self.Materias = self.query.getMateriasList()
         self.search_filters = {}
         self.getWindow()
-        # self.getButtons()
+        self.getButtons()
         self.getTreeview()
         self.getEntries()
         self.updateEntryAndTw()
         # self.query.createFakeHomeworks()
-        # 
+
     
     def getWindow (self):
         self.view_wins.title("Tareas")
@@ -82,30 +81,36 @@ class HomeworksWindow:
         self.treeview.column("#3",minwidth=100,width=150, anchor= CENTER)
         self.treeview.column("#4",minwidth=100,width=150, anchor= CENTER)
         self.treeview.column("#5",minwidth=100,width=150, anchor= CENTER)
-
-
-
-    # def getButtons(self):
-    #     ButtonsData = {
-    #         "Eliminar": lambda: DeleteHomework(self), 
-    #         "Ubicacion": lambda: OpenPath(self), 
-    #         "Abrir": lambda: OpenHomework(self),
-    #         "PDF": lambda: DoctoPdf(self)}
         
-    #     for i in range(len(ButtonsData.keys())):
-    #         btn = Button(self.view_buttons_frame, text = list(ButtonsData.keys())[i], command= list(ButtonsData.values())[i], width=10, height=1)
-    #         btn.grid(row = 0, column = i, sticky = W + E)
-
-    #     self.treeview.tag_configure('Tareas', font=("", 10), foreground = 'Black')
-    #     getHomeworks(self)
-
-
+    def getButtons(self):
+        ButtonsData = {
+            "Eliminar": lambda: self.executeHomework("Eliminar"), 
+            "Ubicacion": lambda: self.executeHomework("Ubicacion"), 
+            "Abrir": lambda: self.executeHomework("Abrir"),
+            "PDF": lambda: self.executeHomework("PDF")}
+        
+        for i in range(len(ButtonsData.keys())):
+            btn = Button(self.view_buttons_frame, text = list(ButtonsData.keys())[i], command= list(ButtonsData.values())[i], width=10)
+            btn.grid(row = 0, column = i, sticky = W + E)
+            
+    def executeHomework(self, type):
+        HomeworkId = self.treeview.item(self.treeview.selection())['text']
+        Homework = self.query.getHomework(HomeworkId)
+        Homework = Tarea(Homework[0], Homework[1], Homework[2], Homework[3], Homework[4])
+    
+        if type == "Eliminar":
+            Homework.delete()
+        elif type == "Ubicacion":
+            Homework.openLocation()
+        elif type == "Abrir":
+            Homework.open()
+        elif type == "PDF":
+            Homework.doctoPdf()
+            
     def updateEntryAndTw(self):
         Homeworks = self.query.getHomeworksList()
         Materias = set(self.query.getMateriasList())
         Documents = {i[2] for i in Homeworks}
-        
-        
         Lista_organizada = []
         
         Num = self.query.run_query("SELECT max(Numero) AS NumTareas FROM Tarea GROUP BY DATE(FechaHora) ").fetchall()

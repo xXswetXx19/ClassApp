@@ -71,11 +71,16 @@ class Query(object):
         if not fecha:
             return self.run_query("SELECT * FROM Tarea").fetchall()
         return self.run_query("SELECT * FROM Tarea WHERE Fecha = ?", (fecha,)).fetchall()
+
+    def getHomework(self, id_tarea):
+        return self.run_query("SELECT * FROM Tarea WHERE Id = ?", (id_tarea,)).fetchone()
     
     def createHomework(self, fecha, materia):
         self.run_query("INSERT INTO Tarea VALUES (NULL, ?, ?)", (fecha, materia))
         
-    
+    def deleteHomework(self, id_tarea):
+        self.run_query("DELETE FROM Tarea WHERE Id = ?", (id_tarea,))
+        
 
     def createFakeHomeworks(self):
         import random
