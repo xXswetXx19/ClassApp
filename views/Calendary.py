@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 import calendar
 from datetime import date
 from Core.Database import Query
-from Clases.Entidades import Dia
+from Clases.Dia import Dia
 
 db = Query()
 

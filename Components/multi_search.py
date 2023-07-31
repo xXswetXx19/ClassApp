@@ -1,4 +1,5 @@
 from Components.Autocomplete import AutocompleteCombobox
+from datetime import datetime
 
 class multi_search (AutocompleteCombobox):
     def __init__ (self, master=None, completevalues=None, Treeview=None, column=None, filters={},  **kwargs):
@@ -6,52 +7,60 @@ class multi_search (AutocompleteCombobox):
 
         self.treeview = Treeview
         self.treeviewColumn = column
-        self.treeItems = self.treeview.get_children()
-        self.treeview_values = completevalues
-        self.column_values = []
+        self.allTreeItems = []
+        self.treeview_values = []
         self.search_filters = filters
         
-        self.setTreeview()
         self.bind("<<ComboboxSelected>>", self.handle_list_selection)
         self.bind("<Tab>", self.handle_keyrelease)
+        self.bind("<Return>", self.handle_keyrelease)
 
-
-    def setTreeview(self):
+    def setTreeview(self) -> None:
         self.clear_Treeview()
+        self.treeview_values.sort(key=lambda x: (datetime.strptime(x[4], '%d/%m/%Y'), -x[3]))
         for value in self.treeview_values:
             self.treeview.insert("", 0, text=value[0], values=value[1:])
-        self.treeItems = self.treeview.get_children()
-        
-        for child in self.treeview.get_children():
-            values = self.treeview.item(child)["values"]
-            value = values[self.treeviewColumn]
-            self.column_values.append(value)
-            
+
+        self.allTreeItems = self.treeview.get_children()
  
-    def clear_Treeview(self):
+    def clear_Treeview(self) -> None:
         for child in set(self.treeview.get_children()):
             self.treeview.detach(child)
     
-    def fill_Treeview(self):
-        self.clear_Treeview()        
-        for child in set(self.treeItems):
-            self.treeview.move(child, '', 0)
+    def fill_Treeview(self, list=None) -> None:
+        self.clear_Treeview()
+        if list:
+            for child in self.order_lists(list):
+                self.treeview.move(child, '', 0)
+        else:   
+            for child in self.order_lists(self.allTreeItems):
+                self.treeview.move(child, '', 0)
 
     
-    def handle_list_selection(self, event):
+    def handle_list_selection(self, event) -> None:
         value = self.get()
-        self.fill_Treeview()
         if value:
             self.search_filters[str(self.treeviewColumn)] = value
-            filtereds = self.filter_treeview(event)
-            
-            self.clear_Treeview()
-            for child in filtereds:
-                self.treeview.move(child, '', 0)    
+            filtereds = self.filter_treeview()
+            if filtereds:
+                self.fill_Treeview(filtereds)
+            else:
+                self.clear_Treeview()
+                      
+    def order_lists(self, lista : list) -> set:
+        # para ordenar tambien por hora dejo este codigo, pero aqui no es necesario por los numeros
+        #lista.sort(key=lambda x: (datetime.strptime(self.treeview.item(x)["values"][3], '%d/%m/%Y'), -self.treeview.item(x)["values"][2], datetime.strptime(self.treeview.item(x)["values"][4], '%H:%M:%S')))
+        lista = list(lista)
+        lista.sort(key=lambda x: (datetime.strptime(self.treeview.item(x)["values"][3], '%d/%m/%Y'), -self.treeview.item(x)["values"][2]))
+        return lista
                 
-    def filter_treeview(self, event):
+    def filter_treeview(self):
         self.fill_Treeview()
         childs = set(self.treeview.get_children())
+        
+        if not any(self.search_filters.values()):
+            return "No results found"
+
         for row in set(self.treeview.get_children()):
             for column_index in self.search_filters.keys():
                 column_value = str(self.treeview.item(row)["values"][int(column_index)])
@@ -59,42 +68,40 @@ class multi_search (AutocompleteCombobox):
                     if (column_value not in set(self.search_filters[column_index])) and (column_value != self.search_filters[column_index]):
                         childs.remove(row)
                         break
-        return childs 
+        return childs
 
     def handle_keyrelease(self, event):
         super().handle_keyrelease(event)
         hits = set(self._hits)
-    
-        if event.send_event and event.keysym == "Tab":
-            if self.get():    
-                hits = set([self.get()])
+
+        if event.keysym == "Tab" or event.keysym == "Return":
+            if event.send_event:
+                hits = set([self.get()]) if self.get() else set()
             else:
-                hits = set()
-        elif event.keysym == "Tab" and not event.send_event:
-            return 
-       
-        self.search_filters[str(self.treeviewColumn)] = hits
-        filtereds = self.filter_treeview(event)
-        
-        if event.keysym == "BackSpace" and not self.get():
+                return
+            
+        if not hits and self.get():
+            self.delete(0, "end")
             self.search_filters[str(self.treeviewColumn)] = set()
-    
+            
+        self.search_filters[str(self.treeviewColumn)] = hits
+        
+        filtereds = self.filter_treeview()
+        
         self.clear_Treeview()
-        for child in filtereds:
-            self.treeview.move(child, '', 0)           
-
-
-
+        
+        if event.keysym == "BackSpace" and self.get():
+            self.search_filters[str(self.treeviewColumn)] = set()
+            filtereds = self.filter_treeview()
+                
+        if filtereds != "No results found" and filtereds:
+            self.fill_Treeview(filtereds)
             
+        elif filtereds == "No results found" and not self.get():
+            self.fill_Treeview()
             
-        
-        
-        
-        
-        
-        
-        
-
+        elif not filtereds:
+            self.clear_Treeview()
 
     def set_tw_completion_list(self, new_completion_list):
         self.treeview_values = new_completion_list
